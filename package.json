@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "axios": "^1.9.0",
+    "pdfjs-dist": "^5.2.133",
+    "pg": "^8.15.6",
+    "react-pdf": "^9.2.1"
+  }
+}
