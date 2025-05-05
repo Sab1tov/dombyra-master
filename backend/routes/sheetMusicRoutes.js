@@ -11,10 +11,10 @@ require('dotenv').config()
 
 const router = express.Router()
 
-// ✅ Настраиваем `multer` (ограничиваем размер до 5MB)
+// ✅ Настраиваем `multer` для загрузки нот (ограничиваем размер до 10MB)
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		cb(null, 'uploads/')
+		cb(null, 'uploads/sheet_music/')
 	},
 	filename: (req, file, cb) => {
 		const ext = path.extname(file.originalname)
@@ -27,7 +27,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({
 	storage,
-	limits: { fileSize: 5 * 1024 * 1024 },
+	limits: { fileSize: 10 * 1024 * 1024 }, // до 10MB для PDF файлов
+	fileFilter: (req, file, cb) => {
+		// Проверка типа файла (разрешаем только PDF)
+		if (file.mimetype === 'application/pdf') {
+			cb(null, true)
+		} else {
+			cb(new Error('Разрешены только PDF файлы'), false)
+		}
+	},
 })
 
 // ✅ Получить все ноты (доступно всем, включая незарегистрированных)
@@ -182,7 +190,7 @@ router.get('/:id', async (req, res) => {
 			instrument: 'dombyra', // Домбыра по умолчанию
 			difficulty: 'intermediate', // Средняя сложность по умолчанию
 			createdAt: sheetMusic.created_at || new Date().toISOString(),
-			downloads: sheetMusic.downloads || 0,
+			downloads: sheetMusic.views || 0, // Используем views как downloads, если downloads отсутствует
 			likes: sheetMusic.views || 0, // Используем views как likes, если likes отсутствует
 			pages: 1, // Значение по умолчанию
 			authorName: user.username,
@@ -258,64 +266,76 @@ router.post(
 		}
 
 		try {
-			const { title, composer } = req.body
-			const file_path = req.file ? `uploads/${req.file.filename}` : null
+			const { title, composer, description, difficulty, tags } = req.body
+			const file_path = req.file
+				? `uploads/sheet_music/${req.file.filename}`
+				: null
 			const userId = req.user.id
 
-			const newNote = await pool.query(
-				`INSERT INTO sheet_music (title, composer, file_path, user_id) 
-			 VALUES ($1, $2, $3, $4) RETURNING *`,
-				[title, composer, file_path, userId]
-			)
+			if (!file_path) {
+				return res.status(400).json({ error: 'Файл с нотами обязателен' })
+			}
 
-			res
-				.status(201)
-				.json({ message: 'Нота добавлена!', note: newNote.rows[0] })
+			// Начинаем транзакцию
+			const client = await pool.connect()
+			try {
+				await client.query('BEGIN')
+
+				// Создаем запись о нотах
+				const newSheet = await client.query(
+					`INSERT INTO sheet_music 
+					(title, composer, description, file_path, difficulty, user_id) 
+					VALUES ($1, $2, $3, $4, $5, $6) 
+					RETURNING *`,
+					[
+						title,
+						composer,
+						description || '',
+						file_path,
+						difficulty || 'intermediate',
+						userId,
+					]
+				)
+
+				const sheetId = newSheet.rows[0].id
+
+				// Если переданы теги, добавляем их
+				if (tags && Array.isArray(tags) && tags.length > 0) {
+					for (const tag of tags) {
+						await client.query(
+							`INSERT INTO sheet_music_tags (sheet_music_id, name) 
+							VALUES ($1, $2) 
+							ON CONFLICT (sheet_music_id, name) DO NOTHING`,
+							[sheetId, tag.trim()]
+						)
+					}
+				}
+
+				await client.query('COMMIT')
+
+				res.status(201).json({
+					message: 'Ноты успешно добавлены!',
+					sheet: newSheet.rows[0],
+					file_url: `http://localhost:5000/${file_path}`,
+				})
+			} catch (error) {
+				await client.query('ROLLBACK')
+				throw error
+			} finally {
+				client.release()
+			}
 		} catch (error) {
-			console.error('Ошибка при добавлении ноты:', error)
-			res.status(500).json({ error: 'Ошибка сервера' })
+			console.error('Ошибка при добавлении нот:', error)
+			// Если ошибка связана с типом файла, возвращаем конкретную ошибку
+			if (error.message === 'Разрешены только PDF файлы') {
+				return res.status(400).json({ error: error.message })
+			}
+			res.status(500).json({ error: 'Ошибка сервера при добавлении нот' })
 		}
 	}
 )
 
-// ✅ Удалить ноту
-router.delete('/:id', authenticateToken, async (req, res) => {
-	try {
-		const { id } = req.params
-		const userId = req.user.id
-		const userRole = req.user.role
-
-		const note = await pool.query('SELECT * FROM sheet_music WHERE id = $1', [
-			id,
-		])
-		if (note.rows.length === 0) {
-			return res.status(404).json({ error: 'Нота не найдена' })
-		}
-
-		if (note.rows[0].user_id !== userId && userRole !== 'admin') {
-			return res.status(403).json({ error: 'Нет прав на удаление' })
-		}
-
-		if (note.rows[0].file_path) {
-			const filePath = path.join(__dirname, '..', note.rows[0].file_path)
-			try {
-				await fs.access(filePath)
-				await fs.unlink(filePath)
-				console.log(`✅ Файл удалён: ${filePath}`)
-			} catch {
-				console.warn(`⚠️ Файл не найден: ${filePath}`)
-			}
-		}
-
-		await pool.query('DELETE FROM sheet_music WHERE id = $1', [id])
-		res.json({ message: 'Нота и файл удалены!' })
-	} catch (error) {
-		console.error('Ошибка при удалении ноты:', error)
-		res.status(500).json({ error: 'Ошибка сервера' })
-	}
-})
-
-// ✅ Редактировать ноту (только владелец или админ)
+// ✅ Обновить информацию о нотах (без файла)
 router.put(
 	'/:id',
 	authenticateToken,
@@ -328,83 +348,222 @@ router.put(
 
 		try {
 			const { id } = req.params
-			const { title, composer } = req.body
+			const { title, composer, description, difficulty, tags } = req.body
 			const userId = req.user.id
-			const userRole = req.user.role
 
-			const note = await pool.query('SELECT * FROM sheet_music WHERE id = $1', [
-				id,
-			])
-			if (note.rows.length === 0) {
-				return res.status(404).json({ error: 'Нота не найдена' })
-			}
-
-			// Только автор или админ
-			if (note.rows[0].user_id !== userId && userRole !== 'admin') {
-				return res.status(403).json({ error: 'Нет прав на редактирование' })
-			}
-
-			const updated = await pool.query(
-				'UPDATE sheet_music SET title = $1, composer = $2, updated_at = NOW() WHERE id = $3 RETURNING *',
-				[title, composer, id]
+			// Проверяем, существуют ли ноты и принадлежат ли они пользователю
+			const sheetCheck = await pool.query(
+				'SELECT * FROM sheet_music WHERE id = $1',
+				[id]
 			)
 
-			res.json({ message: 'Нота обновлена!', note: updated.rows[0] })
+			if (sheetCheck.rows.length === 0) {
+				return res.status(404).json({ error: 'Ноты не найдены' })
+			}
+
+			if (sheetCheck.rows[0].user_id !== userId) {
+				return res
+					.status(403)
+					.json({ error: 'У вас нет прав для редактирования этих нот' })
+			}
+
+			// Начинаем транзакцию
+			const client = await pool.connect()
+			try {
+				await client.query('BEGIN')
+
+				// Обновляем информацию о нотах
+				const updatedSheet = await client.query(
+					`UPDATE sheet_music 
+					SET title = $1, composer = $2, description = $3, difficulty = $4, updated_at = CURRENT_TIMESTAMP
+					WHERE id = $5 
+					RETURNING *`,
+					[title, composer, description || '', difficulty || 'intermediate', id]
+				)
+
+				// Если переданы теги, обновляем их
+				if (tags && Array.isArray(tags)) {
+					// Удаляем существующие теги
+					await client.query(
+						'DELETE FROM sheet_music_tags WHERE sheet_music_id = $1',
+						[id]
+					)
+
+					// Добавляем новые теги
+					for (const tag of tags) {
+						if (tag.trim()) {
+							await client.query(
+								`INSERT INTO sheet_music_tags (sheet_music_id, name) 
+								VALUES ($1, $2)`,
+								[id, tag.trim()]
+							)
+						}
+					}
+				}
+
+				await client.query('COMMIT')
+
+				res.json({
+					message: 'Информация о нотах успешно обновлена',
+					sheet: updatedSheet.rows[0],
+				})
+			} catch (error) {
+				await client.query('ROLLBACK')
+				throw error
+			} finally {
+				client.release()
+			}
 		} catch (error) {
-			console.error('Ошибка при редактировании ноты:', error)
-			res.status(500).json({ error: 'Ошибка сервера' })
+			console.error('Ошибка при обновлении нот:', error)
+			res.status(500).json({ error: 'Ошибка сервера при обновлении нот' })
 		}
 	}
 )
 
-// ✅ Засчитать просмотр (только авторизованные)
-router.put('/:id/view', authenticateToken, async (req, res) => {
-	try {
-		const { id } = req.params
+// ✅ Обновить файл нот
+router.put(
+	'/:id/file',
+	authenticateToken,
+	upload.single('file'),
+	async (req, res) => {
+		try {
+			const { id } = req.params
+			const userId = req.user.id
 
-		const note = await pool.query('SELECT id FROM sheet_music WHERE id = $1', [
-			id,
-		])
-		if (note.rows.length === 0) {
-			return res.status(404).json({ error: 'Нота не найдена' })
+			if (!req.file) {
+				return res.status(400).json({ error: 'Файл с нотами обязателен' })
+			}
+
+			// Проверяем, существуют ли ноты и принадлежат ли они пользователю
+			const sheetCheck = await pool.query(
+				'SELECT * FROM sheet_music WHERE id = $1',
+				[id]
+			)
+
+			if (sheetCheck.rows.length === 0) {
+				return res.status(404).json({ error: 'Ноты не найдены' })
+			}
+
+			if (sheetCheck.rows[0].user_id !== userId) {
+				return res
+					.status(403)
+					.json({ error: 'У вас нет прав для редактирования этих нот' })
+			}
+
+			const oldFilePath = sheetCheck.rows[0].file_path
+			const newFilePath = `uploads/sheet_music/${req.file.filename}`
+
+			// Обновляем запись в базе данных
+			const updatedSheet = await pool.query(
+				`UPDATE sheet_music 
+				SET file_path = $1, updated_at = CURRENT_TIMESTAMP
+				WHERE id = $2 
+				RETURNING *`,
+				[newFilePath, id]
+			)
+
+			// Удаляем старый файл, если он существует
+			if (oldFilePath) {
+				const fullPath = path.join(__dirname, '..', oldFilePath)
+				try {
+					await fs.unlink(fullPath)
+					console.log(`Старый файл удален: ${fullPath}`)
+				} catch (error) {
+					console.error(`Ошибка при удалении старого файла ${fullPath}:`, error)
+					// Продолжаем выполнение, даже если не удалось удалить старый файл
+				}
+			}
+
+			res.json({
+				message: 'Файл нот успешно обновлен',
+				sheet: updatedSheet.rows[0],
+				file_url: `http://localhost:5000/${newFilePath}`,
+			})
+		} catch (error) {
+			console.error('Ошибка при обновлении файла нот:', error)
+			res.status(500).json({ error: 'Ошибка сервера при обновлении файла нот' })
 		}
-
-		await pool.query('UPDATE sheet_music SET views = views + 1 WHERE id = $1', [
-			id,
-		])
-		res.json({ message: 'Просмотр засчитан' })
-	} catch (error) {
-		console.error('Ошибка при увеличении просмотров:', error)
-		res.status(500).json({ error: 'Ошибка сервера' })
 	}
-})
+)
 
-// ✅ Инкрементировать счетчик загрузок (только для авторизованных)
-router.post('/:id/download', authenticateToken, async (req, res) => {
+// ✅ Удалить ноты
+router.delete('/:id', authenticateToken, async (req, res) => {
 	try {
 		const { id } = req.params
 		const userId = req.user.id
 
-		// Проверяем существование ноты
-		const noteExists = await pool.query(
-			'SELECT id FROM sheet_music WHERE id = $1',
+		// Проверяем, существуют ли ноты и принадлежат ли они пользователю
+		const sheetCheck = await pool.query(
+			'SELECT * FROM sheet_music WHERE id = $1',
 			[id]
 		)
 
-		if (noteExists.rows.length === 0) {
-			return res.status(404).json({ error: 'Нота не найдена' })
+		if (sheetCheck.rows.length === 0) {
+			return res.status(404).json({ error: 'Ноты не найдены' })
 		}
 
-		// Увеличиваем счетчик загрузок
+		if (sheetCheck.rows[0].user_id !== userId) {
+			return res
+				.status(403)
+				.json({ error: 'У вас нет прав для удаления этих нот' })
+		}
+
+		const filePath = sheetCheck.rows[0].file_path
+
+		// Удаляем запись из базы данных
+		await pool.query('DELETE FROM sheet_music WHERE id = $1', [id])
+
+		// Удаляем файл, если он существует
+		if (filePath) {
+			const fullPath = path.join(__dirname, '..', filePath)
+			try {
+				await fs.unlink(fullPath)
+				console.log(`Файл удален: ${fullPath}`)
+			} catch (error) {
+				console.error(`Ошибка при удалении файла ${fullPath}:`, error)
+				// Продолжаем выполнение, даже если не удалось удалить файл
+			}
+		}
+
+		res.json({ message: 'Ноты успешно удалены' })
+	} catch (error) {
+		console.error('Ошибка при удалении нот:', error)
+		res.status(500).json({ error: 'Ошибка сервера при удалении нот' })
+	}
+})
+
+// ✅ Скачать файл нот (увеличивает счетчик скачиваний)
+router.get('/:id/download', async (req, res) => {
+	try {
+		const { id } = req.params
+
+		// Получаем информацию о нотах
+		const sheet = await pool.query('SELECT * FROM sheet_music WHERE id = $1', [
+			id,
+		])
+
+		if (sheet.rows.length === 0) {
+			return res.status(404).json({ error: 'Ноты не найдены' })
+		}
+
+		if (!sheet.rows[0].file_path) {
+			return res.status(404).json({ error: 'Файл нот не найден' })
+		}
+
+		// Увеличиваем счетчик скачиваний
 		await pool.query(
 			'UPDATE sheet_music SET downloads = downloads + 1 WHERE id = $1',
 			[id]
 		)
 
-		res.json({ message: 'Счетчик загрузок увеличен' })
+		// Формируем путь к файлу
+		const filePath = path.join(__dirname, '..', sheet.rows[0].file_path)
+
+		// Отправляем файл
+		res.download(filePath, `${sheet.rows[0].title}.pdf`)
 	} catch (error) {
-		console.error('Ошибка при обновлении счетчика загрузок:', error)
-		res.status(500).json({ error: 'Ошибка сервера' })
+		console.error('Ошибка при скачивании нот:', error)
+		res.status(500).json({ error: 'Ошибка сервера при скачивании нот' })
 	}
 })
 
