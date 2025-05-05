@@ -61,28 +61,53 @@ router.post('/register', registerValidation, async (req, res) => {
 router.post('/login', loginValidation, async (req, res) => {
 	const errors = validationResult(req)
 	if (!errors.isEmpty()) {
+		console.log('Login validation errors:', errors.array())
 		return res.status(400).json({ errors: errors.array() })
 	}
 
 	try {
 		const { email, password } = req.body
+		console.log(
+			`[Backend Auth] Login attempt for email: ${email}, password provided: ${!!password}`
+		)
 
+		// Проверка существования пользователя
 		const user = await pool.query('SELECT * FROM users WHERE email = $1', [
 			email,
 		])
+
+		console.log(
+			`[Backend Auth] User lookup result: found=${user.rows.length > 0}`
+		)
+
 		if (user.rows.length === 0) {
+			console.log(`[Backend Auth] User not found: ${email}`)
 			return res.status(401).json({ error: 'Неверный email или пароль' })
 		}
 
+		// Проверка пароля
+		console.log(
+			`[Backend Auth] Checking password for user: ${user.rows[0].username}`
+		)
 		const isMatch = await bcrypt.compare(password, user.rows[0].password)
+		console.log(
+			`[Backend Auth] Password check result: ${isMatch ? 'match' : 'no match'}`
+		)
+
 		if (!isMatch) {
+			console.log(`[Backend Auth] Invalid password for user: ${email}`)
 			return res.status(401).json({ error: 'Неверный email или пароль' })
 		}
 
+		// Создание токена
 		const token = jwt.sign(
 			{ id: user.rows[0].id, username: user.rows[0].username },
 			process.env.JWT_SECRET,
 			{ expiresIn: '1d' }
+		)
+
+		console.log(
+			`[Backend Auth] Login successful for user: ${user.rows[0].username} (ID: ${user.rows[0].id})`
 		)
 
 		res.json({
@@ -95,7 +120,7 @@ router.post('/login', loginValidation, async (req, res) => {
 			},
 		})
 	} catch (error) {
-		console.error(error)
+		console.error('[Backend Auth] Server error during login:', error)
 		res.status(500).json({ error: 'Ошибка сервера' })
 	}
 })
@@ -138,12 +163,10 @@ router.get('/profile', authenticateToken, async (req, res) => {
 	} catch (error) {
 		console.error('❌ Ошибка получения профиля:', error.message)
 		console.error(error.stack) // Выводим стек ошибки для отладки
-		res
-			.status(500)
-			.json({
-				error: 'Ошибка сервера при получении профиля',
-				details: error.message,
-			})
+		res.status(500).json({
+			error: 'Ошибка сервера при получении профиля',
+			details: error.message,
+		})
 	}
 })
 
