@@ -1,0 +1,38 @@
+FROM node:18-alpine AS deps
+
+WORKDIR /app
+
+# Установка зависимостей
+COPY frontend/package*.json ./
+RUN npm install --frozen-lockfile
+
+# Сборка приложения
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY frontend/ ./
+
+# Установка переменных среды для сборки
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV production
+
+# Сборка Next.js
+RUN npm run build
+
+# Запуск продакшен-версии
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Копирование необходимых файлов
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+# Открываем порт
+EXPOSE 3000
+
+# Запускаем приложение
+CMD ["node", "server.js"] 

@@ -1,0 +1,22 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Установка зависимостей для сборки
+RUN apk add --no-cache python3 make g++ build-base
+
+# Копирование файлов package.json и установка зависимостей
+COPY backend/package*.json ./
+RUN npm install --production
+
+# Копирование исходного кода
+COPY backend/ ./
+
+# Создаем директорию для загрузок
+RUN mkdir -p uploads && chmod 777 uploads
+
+# Открываем порт
+EXPOSE 5000
+
+# Запускаем приложение
+CMD ["node", "server.js"] 
