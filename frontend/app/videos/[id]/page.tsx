@@ -1210,7 +1210,7 @@ export default function VideoDetailPage() {
 										Прогресті жүктеу...
 									</span>
 								) : (
-									<>Көру барысы: {debug.progress}%</>
+									<>Көру барысы: {Math.round(debug.progress)}%</>
 								)}
 							</div>
 							{isCompleted && (

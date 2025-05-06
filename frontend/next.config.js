@@ -34,6 +34,23 @@ const nextConfig = {
 			},
 		]
 	},
+	// Включение проверки типов
+	typescript: {
+		// Проверяем ошибки TS во время сборки
+		ignoreBuildErrors: false,
+	},
 }
+
+// Log ESLint configuration status
+console.log(
+	'ESLint checks during build are:',
+	nextConfig.eslint.ignoreDuringBuilds ? 'DISABLED' : 'ENABLED'
+)
+
+// Log TypeScript configuration status
+console.log(
+	'TypeScript checks during build are:',
+	nextConfig.typescript.ignoreBuildErrors ? 'DISABLED' : 'ENABLED'
+)
 
 module.exports = nextConfig
