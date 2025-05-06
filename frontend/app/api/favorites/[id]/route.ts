@@ -1,16 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 // Обработка DELETE запросов для удаления из избранного
 export async function DELETE(
 	request: Request,
-	{ params }: { params: { id: string } }
+	context: { params: { id: string } }
 ) {
 	try {
-		const id = params.id
-		const req = request as NextRequest
+		const id = context.params.id
 
-		// Получаем токен авторизации из заголовков запроса
-		const authHeader = req.headers.get('Authorization')
+		// Получаем заголовки из запроса
+		const authHeader = request.headers.get('Authorization')
 
 		if (!authHeader || !authHeader.startsWith('Bearer ')) {
 			return NextResponse.json(
