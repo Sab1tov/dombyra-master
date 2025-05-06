@@ -8,6 +8,8 @@ RUN apk add --no-cache python3 make g++ build-base
 # Копирование файлов package.json и установка зависимостей
 COPY backend/package*.json ./
 RUN npm install --production
+RUN npm uninstall bcrypt || true
+RUN npm install bcryptjs --save
 
 # Копирование исходного кода
 COPY backend/ ./
