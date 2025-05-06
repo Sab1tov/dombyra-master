@@ -5,13 +5,19 @@ let pool
 
 // Используем DATABASE_URL, если он доступен (для Railway)
 if (process.env.DATABASE_URL) {
-	console.log('Используем DATABASE_URL для подключения к PostgreSQL')
+	// Логируем часть URL для отладки, скрывая пароль
+	const dbUrlForLogging = process.env.DATABASE_URL.replace(
+		/postgresql:\/\/([^:]+):([^@]+)@/,
+		'postgresql://$1:***@'
+	)
+	console.log(
+		`Используем DATABASE_URL для подключения к PostgreSQL: ${dbUrlForLogging}`
+	)
+
 	pool = new Pool({
 		connectionString: process.env.DATABASE_URL,
-		ssl:
-			process.env.NODE_ENV === 'production'
-				? { rejectUnauthorized: false }
-				: false,
+		// Всегда включаем SSL для Railway, но с отключенной проверкой сертификата
+		ssl: { rejectUnauthorized: false },
 	})
 } else {
 	// Иначе используем отдельные параметры (для локальной разработки)
@@ -25,9 +31,19 @@ if (process.env.DATABASE_URL) {
 	})
 }
 
+// Делаем тестовое подключение при запуске
 pool
 	.connect()
-	.then(() => console.log('✅ Connected to PostgreSQL'))
-	.catch(err => console.error('❌ PostgreSQL connection error:', err))
+	.then(client => {
+		console.log('✅ Connected to PostgreSQL')
+		client.release() // Важно освободить клиент после проверки
+	})
+	.catch(err => {
+		console.error('❌ PostgreSQL connection error:', err)
+		console.error(
+			'Детали подключения: Хост:',
+			process.env.DATABASE_URL ? 'из URL' : process.env.DB_HOST
+		)
+	})
 
 module.exports = pool // Экспортируем pool для использования в других файлах
