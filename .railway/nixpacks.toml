@@ -1,0 +1,16 @@
+[variables]
+NPM_CONFIG_CACHE = "/tmp/npm-cache"
+NODE_OPTIONS = "--max-old-space-size=4096"
+
+[phases.setup]
+nixPkgs = ["nodejs", "yarn"]
+
+[phases.install]
+cmds = ['echo "Пропускаем встроенную установку npm"']
+
+[phases.build]
+dependsOn = ["install"]
+cmds = ["echo 'Используем только Dockerfile'"]
+
+[start]
+cmd = "" 
