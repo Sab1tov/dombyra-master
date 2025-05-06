@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/authStore'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface UserProfile {
 	id: number
@@ -85,27 +85,7 @@ export default function ProfilePage() {
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 
-	useEffect(() => {
-		// Импортируем функцию валидации токена
-		import('@/store/authStore').then(module => {
-			// Проверяем токен и автоматически выходим при необходимости
-			const isValid = module.validateToken()
-
-			// Если токен недействительный, функция validateToken уже позаботится о выходе
-			if (!isValid) return
-
-			// Если пользователь не авторизован и токен невалидный
-			if (!user) {
-				router.push('/auth/login')
-				return
-			}
-
-			// Если все в порядке, загружаем профиль
-			fetchUserProfile()
-		})
-	}, [user, router])
-
-	const fetchUserProfile = async () => {
+	const fetchUserProfile = useCallback(async () => {
 		setLoading(true)
 		try {
 			// Получаем данные профиля через API
@@ -387,7 +367,27 @@ export default function ProfilePage() {
 		} finally {
 			setLoading(false)
 		}
-	}
+	}, [user, logout, router])
+
+	useEffect(() => {
+		// Импортируем функцию валидации токена
+		import('@/store/authStore').then(module => {
+			// Проверяем токен и автоматически выходим при необходимости
+			const isValid = module.validateToken()
+
+			// Если токен недействительный, функция validateToken уже позаботится о выходе
+			if (!isValid) return
+
+			// Если пользователь не авторизован и токен невалидный
+			if (!user) {
+				router.push('/auth/login')
+				return
+			}
+
+			// Если все в порядке, загружаем профиль
+			fetchUserProfile()
+		})
+	}, [user, router, fetchUserProfile])
 
 	const handleLogout = () => {
 		logout()

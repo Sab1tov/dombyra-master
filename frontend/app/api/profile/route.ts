@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // Обработка OPTIONS запросов для CORS
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS() {
 	return new NextResponse(null, {
 		status: 200,
 		headers: {
@@ -171,7 +171,10 @@ export async function GET(req: NextRequest) {
 			}
 
 			// Если мы в режиме разработки и все методы не сработали, возвращаем демо-данные
-			if (process.env.NODE_ENV === 'development') {
+			if (
+				process.env.NODE_ENV !== 'production' &&
+				process.env.NODE_ENV !== 'test'
+			) {
 				console.log('[Profile API] Returning demo data')
 				return NextResponse.json(getDemoProfile(), { status: 200, headers })
 			}
@@ -270,7 +273,7 @@ interface JwtPayload {
 	role?: string
 	exp?: number
 	iat?: number
-	[key: string]: any // Для других возможных полей
+	[key: string]: string | number | boolean | object | undefined | null // Для других возможных полей
 }
 
 // Функция для декодирования JWT токена

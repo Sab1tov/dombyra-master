@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
 			try {
 				const errorData = await response.json()
 				return NextResponse.json(errorData, { status: response.status })
-			} catch (e) {
+			} catch {
 				// Если не удалось получить JSON с ошибкой
 				return NextResponse.json(
 					{ error: `Ошибка сервера: ${response.statusText}` },
