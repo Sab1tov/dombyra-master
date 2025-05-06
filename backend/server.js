@@ -50,6 +50,9 @@ app.use('/api/comments', commentRoutes)
 // Подключаем отладочные маршруты
 app.use('/api/debug', debugRoutes)
 
+// Переменная для отслеживания статуса подключения к БД
+let dbConnected = false
+
 // Улучшенная проверка подключения к БД с повторными попытками
 const checkDbConnection = async (retries = 5) => {
 	for (let attempt = 1; attempt <= retries; attempt++) {
@@ -61,6 +64,9 @@ const checkDbConnection = async (retries = 5) => {
 			// Проверяем возможность выполнения запроса
 			const result = await client.query('SELECT NOW()')
 			console.log('✅ Тестовый запрос выполнен успешно:', result.rows[0])
+
+			// Устанавливаем флаг успешного подключения
+			dbConnected = true
 
 			// В production среде автоматически создаем таблицы при запуске
 			if (process.env.NODE_ENV === 'production') {
@@ -75,6 +81,9 @@ const checkDbConnection = async (retries = 5) => {
 				`❌ Ошибка подключения к PostgreSQL (попытка ${attempt}/${retries}):`,
 				err
 			)
+
+			// Сбрасываем флаг, если была ошибка
+			dbConnected = false
 
 			if (attempt < retries) {
 				const waitTime = attempt * 1500 // Увеличиваем время ожидания с каждой попыткой
@@ -99,8 +108,33 @@ app.get('/api/health', (req, res) => {
 	res.json({
 		status: 'ok',
 		message: 'API работает',
-		database: pool._connected ? 'connected' : 'not connected',
+		database: dbConnected ? 'connected' : 'not connected',
 		env: process.env.NODE_ENV,
+		database_url_format: process.env.DATABASE_URL
+			? process.env.DATABASE_URL.replace(
+					/postgresql:\/\/([^:]+):([^@]+)@/,
+					'postgresql://$1:***@'
+			  )
+			: 'not set',
+	})
+})
+
+// Маршрут для проверки переменных окружения (только для отладки)
+app.get('/api/debug/env', (req, res) => {
+	// Проверяем секретный ключ для доступа к отладочной информации
+	const secretKey = req.query.key
+	if (secretKey !== 'dombyra2024') {
+		return res.status(403).json({ error: 'Доступ запрещен' })
+	}
+
+	// Возвращаем основные переменные окружения (без чувствительных данных)
+	res.json({
+		node_env: process.env.NODE_ENV,
+		port: process.env.PORT,
+		database_url_set: !!process.env.DATABASE_URL,
+		cors_origin: process.env.CORS_ORIGIN,
+		jwt_secret_set: !!process.env.JWT_SECRET,
+		db_connected: dbConnected,
 	})
 })
 

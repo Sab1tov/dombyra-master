@@ -14,11 +14,36 @@ if (process.env.DATABASE_URL) {
 		`Используем DATABASE_URL для подключения к PostgreSQL: ${dbUrlForLogging}`
 	)
 
-	pool = new Pool({
-		connectionString: process.env.DATABASE_URL,
-		// Всегда включаем SSL для Railway, но с отключенной проверкой сертификата
-		ssl: { rejectUnauthorized: false },
-	})
+	// Парсим DATABASE_URL вручную для лучшего контроля
+	try {
+		const regex = /postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/
+		const match = process.env.DATABASE_URL.match(regex)
+
+		if (match) {
+			const [, user, password, host, port, database] = match
+			console.log(
+				`Параметры подключения: user=${user}, host=${host}, port=${port}, database=${database}`
+			)
+
+			pool = new Pool({
+				user,
+				password,
+				host,
+				port: parseInt(port, 10),
+				database,
+				ssl: { rejectUnauthorized: false },
+			})
+		} else {
+			throw new Error('URL не соответствует ожидаемому формату')
+		}
+	} catch (error) {
+		console.error('Ошибка при парсинге DATABASE_URL:', error)
+		// Используем URL напрямую как запасной вариант
+		pool = new Pool({
+			connectionString: process.env.DATABASE_URL,
+			ssl: { rejectUnauthorized: false },
+		})
+	}
 } else {
 	// Иначе используем отдельные параметры (для локальной разработки)
 	console.log('Используем локальные параметры для подключения к PostgreSQL')
