@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // Обработка DELETE запросов для удаления из избранного
 export async function DELETE(
-	req: NextRequest,
+	request: Request,
 	{ params }: { params: { id: string } }
 ) {
 	try {
 		const id = params.id
+		const req = request as NextRequest
 
 		// Получаем токен авторизации из заголовков запроса
 		const authHeader = req.headers.get('Authorization')
