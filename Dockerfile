@@ -1,21 +1,22 @@
-FROM node:18
+FROM node:18-alpine
 
 # Установка необходимых зависимостей
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache python3 make g++ build-base
 
 WORKDIR /app
 
+# Настройка npm для обхода проблем с кешированием
+ENV NPM_CONFIG_CACHE=/tmp/npm-cache
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+RUN npm config set cache /tmp/npm-cache --global
+
 # Копирование файлов package.json и установка зависимостей backend
 COPY backend/package*.json ./backend/
-RUN cd backend && npm install
+RUN cd backend && npm install --no-cache
 
 # Копирование файлов package.json и установка зависимостей frontend
 COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm install
+RUN cd frontend && npm install --no-cache
 
 # Копирование остальных файлов
 COPY backend ./backend
