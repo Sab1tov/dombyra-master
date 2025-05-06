@@ -6,17 +6,20 @@ RUN apk add --no-cache python3 make g++ build-base
 WORKDIR /app
 
 # Настройка npm для обхода проблем с кешированием
-ENV NPM_CONFIG_CACHE=/tmp/npm-cache
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN npm config set cache /tmp/npm-cache --global
+ENV NPM_CONFIG_CACHE=/tmp/.npm
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+RUN npm config set cache /tmp/.npm --global
+
+# Убедимся, что директория кеша существует и доступна
+RUN mkdir -p /tmp/.npm && chmod -R 777 /tmp/.npm
 
 # Копирование файлов package.json и установка зависимостей backend
 COPY backend/package*.json ./backend/
-RUN cd backend && npm install --no-cache
+RUN cd backend && npm install --omit=dev
 
 # Копирование файлов package.json и установка зависимостей frontend
 COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm install --no-cache
+RUN cd frontend && npm install --omit=dev
 
 # Копирование остальных файлов
 COPY backend ./backend
