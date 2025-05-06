@@ -1,34 +1,17 @@
 FROM node:18-alpine
 
-# Установка необходимых зависимостей
-RUN apk add --no-cache python3 make g++ build-base
-
 WORKDIR /app
 
-# Настройка npm для обхода проблем с кешированием
-ENV NPM_CONFIG_CACHE=/tmp/.npm
-ENV NODE_OPTIONS="--max-old-space-size=2048"
-RUN npm config set cache /tmp/.npm --global
+# Копируем весь проект сразу
+COPY . .
 
-# Убедимся, что директория кеша существует и доступна
-RUN mkdir -p /tmp/.npm && chmod -R 777 /tmp/.npm
+# Устанавливаем зависимости для backend
+RUN cd backend && npm install --production
 
-# Копирование файлов package.json и установка зависимостей backend
-COPY backend/package*.json ./backend/
-RUN cd backend && npm install --omit=dev
+# Устанавливаем зависимости и собираем frontend
+RUN cd frontend && npm install --production && npm run build
 
-# Копирование файлов package.json и установка зависимостей frontend
-COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm install --omit=dev
-
-# Копирование остальных файлов
-COPY backend ./backend
-COPY frontend ./frontend
-
-# Сборка frontend
-RUN cd frontend && npm run build
-
-# Экспорт порта для backend
+# Экспорт порта
 EXPOSE 5000
 
 # Запуск приложения

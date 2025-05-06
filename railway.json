@@ -3,7 +3,9 @@
 	"build": {
 		"builder": "DOCKERFILE",
 		"dockerfilePath": "Dockerfile",
-		"buildArgs": {}
+		"buildArgs": {
+			"RAILWAY_DOCKERFILE_CACHE": "false"
+		}
 	},
 	"deploy": {
 		"numReplicas": 1,
