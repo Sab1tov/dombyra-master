@@ -2,16 +2,19 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Установка зависимостей для сборки
+# Устанавливаем необходимые зависимости для компиляции bcrypt
 RUN apk add --no-cache python3 make g++ build-base
 
-# Копирование файлов package.json и установка зависимостей
+# Копируем package.json и package-lock.json
 COPY backend/package*.json ./
-RUN npm install --production
-RUN npm uninstall bcrypt || true
-RUN npm install bcryptjs --save
 
-# Копирование исходного кода
+# Удаляем node_modules, если они уже есть
+RUN rm -rf node_modules
+
+# Устанавливаем все зависимости, включая bcrypt, с компиляцией
+RUN npm install --production
+
+# Копируем исходный код
 COPY backend/ ./
 
 # Создаем директорию для загрузок

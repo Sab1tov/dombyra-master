@@ -18,8 +18,16 @@ const app = express()
 // Настраиваем порт
 const PORT = process.env.PORT || 5000
 
+// Настройка CORS с поддержкой доменов из переменной окружения
+const corsOptions = {
+	origin: process.env.CORS_ORIGIN || 'https://dombyra-master.vercel.app',
+	credentials: true,
+	optionsSuccessStatus: 200,
+}
+console.log('✅ CORS настроен для домена:', corsOptions.origin)
+
 // Добавляем middleware
-app.use(cors())
+app.use(cors(corsOptions))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
