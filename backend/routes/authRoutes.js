@@ -25,35 +25,49 @@ if (!fs.existsSync(avatarsDir)) {
 }
 
 router.post('/register', registerValidation, async (req, res) => {
+	console.log('📝 Получен запрос на регистрацию:', {
+		body: req.body,
+		headers: {
+			'content-type': req.headers['content-type'],
+			origin: req.headers['origin'],
+		},
+	})
+
 	const errors = validationResult(req)
 	if (!errors.isEmpty()) {
+		console.log('❌ Ошибки валидации при регистрации:', errors.array())
 		return res.status(400).json({ errors: errors.array() })
 	}
 
 	try {
 		const { username, email, password } = req.body
+		console.log(`🔍 Проверка существования пользователя: ${email}, ${username}`)
 
 		const userExists = await pool.query(
 			'SELECT * FROM users WHERE email = $1 OR username = $2',
 			[email, username]
 		)
 		if (userExists.rows.length > 0) {
+			console.log('❌ Email или Username уже используются:', userExists.rows)
 			return res
 				.status(400)
 				.json({ error: 'Email или Username уже используются' })
 		}
 
+		console.log('🔒 Хэширование пароля')
 		const hashedPassword = await bcrypt.hash(password, 10)
 
+		console.log('📥 Вставка нового пользователя в БД')
 		const newUser = await pool.query(
 			'INSERT INTO users (username, email, password, created_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING id, username, email',
 			[username, email, hashedPassword]
 		)
 
+		console.log('✅ Пользователь успешно создан:', newUser.rows[0])
 		res.json({ message: 'Регистрация успешна!', user: newUser.rows[0] })
 	} catch (error) {
-		console.error(error)
-		res.status(500).json({ error: 'Ошибка сервера' })
+		console.error('❌ Ошибка при регистрации:', error)
+		res.status(500).json({ error: 'Ошибка сервера', details: error.message })
 	}
 })
 
