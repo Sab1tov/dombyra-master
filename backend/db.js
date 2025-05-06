@@ -1,74 +1,75 @@
-const { Pool } = require('pg') // Импортируем клиент PostgreSQL
-require('dotenv').config() // Загружаем переменные окружения
+const { Pool } = require('pg')
+require('dotenv').config()
 
-let pool
-
-// Используем DATABASE_URL, если он доступен (для Railway)
+// Перед созданием пула вывести информацию об окружении для отладки
+console.log('DATABASE_URL установлен:', !!process.env.DATABASE_URL)
 if (process.env.DATABASE_URL) {
-	// Логируем часть URL для отладки, скрывая пароль
-	const dbUrlForLogging = process.env.DATABASE_URL.replace(
+	// Маскируем пароль для логов
+	const safeUrl = process.env.DATABASE_URL.replace(
 		/postgresql:\/\/([^:]+):([^@]+)@/,
 		'postgresql://$1:***@'
 	)
-	console.log(
-		`Используем DATABASE_URL для подключения к PostgreSQL: ${dbUrlForLogging}`
-	)
-
-	// Парсим DATABASE_URL вручную для лучшего контроля
-	try {
-		const regex = /postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/
-		const match = process.env.DATABASE_URL.match(regex)
-
-		if (match) {
-			const [, user, password, host, port, database] = match
-			console.log(
-				`Параметры подключения: user=${user}, host=${host}, port=${port}, database=${database}`
-			)
-
-			pool = new Pool({
-				user,
-				password,
-				host,
-				port: parseInt(port, 10),
-				database,
-				ssl: { rejectUnauthorized: false },
-			})
-		} else {
-			throw new Error('URL не соответствует ожидаемому формату')
-		}
-	} catch (error) {
-		console.error('Ошибка при парсинге DATABASE_URL:', error)
-		// Используем URL напрямую как запасной вариант
-		pool = new Pool({
-			connectionString: process.env.DATABASE_URL,
-			ssl: { rejectUnauthorized: false },
-		})
-	}
-} else {
-	// Иначе используем отдельные параметры (для локальной разработки)
-	console.log('Используем локальные параметры для подключения к PostgreSQL')
-	pool = new Pool({
-		user: process.env.DB_USER,
-		host: process.env.DB_HOST,
-		database: process.env.DB_NAME,
-		password: process.env.DB_PASSWORD,
-		port: process.env.DB_PORT,
-	})
+	console.log('DATABASE_URL формат:', safeUrl)
 }
 
-// Делаем тестовое подключение при запуске
+// Создаем объект конфигурации
+const poolConfig = {}
+
+// Подход 1: Используем прямые параметры подключения
+if (process.env.DATABASE_URL) {
+	try {
+		// Парсим URL для прямого использования компонентов
+		const dbUrl = new URL(process.env.DATABASE_URL)
+
+		poolConfig.user = dbUrl.username
+		poolConfig.password = dbUrl.password
+		poolConfig.host = dbUrl.hostname
+		poolConfig.port = dbUrl.port || 5432
+		poolConfig.database = dbUrl.pathname.substring(1) // Убираем начальный "/"
+		poolConfig.ssl = { rejectUnauthorized: false }
+
+		console.log(
+			`Использую параметры: host=${poolConfig.host}, port=${poolConfig.port}, database=${poolConfig.database}, user=${poolConfig.user}`
+		)
+	} catch (err) {
+		console.error('Ошибка при парсинге DATABASE_URL:', err)
+
+		// Запасной вариант - используем URL напрямую
+		poolConfig.connectionString = process.env.DATABASE_URL
+		poolConfig.ssl = { rejectUnauthorized: false }
+		console.log('Использую DATABASE_URL напрямую')
+	}
+} else {
+	// Используем локальную конфигурацию
+	poolConfig.user = process.env.DB_USER || 'postgres'
+	poolConfig.password = process.env.DB_PASSWORD
+	poolConfig.host = process.env.DB_HOST || 'localhost'
+	poolConfig.port = process.env.DB_PORT || 5432
+	poolConfig.database = process.env.DB_NAME || 'dombyra'
+	console.log(
+		`Использую локальное подключение: ${poolConfig.host}:${poolConfig.port}`
+	)
+}
+
+// Создаем пул соединений
+const pool = new Pool(poolConfig)
+
+// Отслеживаем ошибки на пуле
+pool.on('error', err => {
+	console.error('Непредвиденная ошибка пула PostgreSQL:', err)
+})
+
+// Выполняем тестовое подключение для проверки
 pool
-	.connect()
-	.then(client => {
-		console.log('✅ Connected to PostgreSQL')
-		client.release() // Важно освободить клиент после проверки
-	})
-	.catch(err => {
-		console.error('❌ PostgreSQL connection error:', err)
-		console.error(
-			'Детали подключения: Хост:',
-			process.env.DATABASE_URL ? 'из URL' : process.env.DB_HOST
+	.query('SELECT NOW()')
+	.then(res => {
+		console.log(
+			'✅ PostgreSQL подключен успешно, время сервера:',
+			res.rows[0].now
 		)
 	})
+	.catch(err => {
+		console.error('❌ Не удалось подключиться к PostgreSQL:', err)
+	})
 
-module.exports = pool // Экспортируем pool для использования в других файлах
+module.exports = pool
