@@ -16,7 +16,7 @@ import api from '@/services/axiosInstance'
 import { useAuthStore } from '@/store/authStore'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'react-hot-toast'
 
 interface VideoDetailType {
@@ -34,6 +34,8 @@ interface VideoDetailType {
 	authorId?: number
 	isCompleted?: boolean
 	isFavorite?: boolean
+	// Примечание: currentTime используется для доступа к HTMLVideoElement.currentTime,
+	// а не как свойство этого интерфейса. Это вызывает предупреждение линтера.
 }
 
 interface NextVideoType {
@@ -71,49 +73,14 @@ export default function VideoDetailPage() {
 	const maxProgressRef = useRef(0)
 	const [authError, setAuthError] = useState(false)
 
-	const progressBarStyle = {
-		height: '100%',
-		backgroundColor: progress >= 80 ? '#10B981' : '#4F46E5',
-		width: `${progress}%`,
-		borderRadius: '0.375rem',
-		transition: 'width 0.1s linear',
-	}
-
-	const loadDemoData = () => {
-		const demoVideo: VideoDetailType = {
-			id: Number(id),
-			title: 'Основы игры на домбре для начинающих',
-			description:
-				'В этом уроке вы узнаете основные аккорды и приёмы игры на домбре, подходящие для начинающих музыкантов. Мы рассмотрим правильную постановку рук, базовые упражнения для развития техники и разберем простую мелодию. Этот урок станет отличным стартом для всех, кто хочет научиться играть на этом традиционном казахском инструменте.',
-			thumbnail: '/images/demo/video1.jpg',
-			videoUrl: 'https://example.com/videos/dombyra-basics.mp4',
-			duration: 685, // 11:25
-			difficulty: 'beginner',
-			createdAt: '2023-10-15T10:30:00Z',
-			likes: 87,
-			authorName: 'Марат Казиев',
-			authorId: 2,
-			views: 328,
-			isFavorite: false,
-		}
-
-		setVideo(demoVideo)
-
-		setNextVideo({
-			id: Number(id) + 1,
-			title: 'Разбор простой композиции',
-			isLocked: false,
-		})
-	}
-
-	const formatTime = (seconds: number): string => {
+	const formatTime = useCallback((seconds: number): string => {
 		if (isNaN(seconds)) return '0:00'
 		const minutes = Math.floor(seconds / 60)
 		const secs = Math.floor(seconds % 60)
 		return `${minutes}:${secs < 10 ? '0' : ''}${secs}`
-	}
+	}, [])
 
-	const checkNextLesson = async () => {
+	const checkNextLesson = useCallback(async () => {
 		try {
 			console.log('Проверяем доступность следующего урока')
 			const response = await api.get(`/video-lessons/${id}/next`)
@@ -162,9 +129,30 @@ export default function VideoDetailPage() {
 			console.error('Ошибка при проверке следующего урока:', error)
 			return false
 		}
-	}
+	}, [id, setNextVideo])
 
-	const saveProg = async () => {
+	const startNextVideoCountdown = useCallback(() => {
+		setCountdown(5)
+		setShowNextModal(true)
+
+		if (countdownRef.current) {
+			clearInterval(countdownRef.current)
+		}
+
+		countdownRef.current = setInterval(() => {
+			setCountdown(prev => {
+				if (prev <= 1) {
+					if (countdownRef.current) {
+						clearInterval(countdownRef.current)
+					}
+					return 0
+				}
+				return prev - 1
+			})
+		}, 1000)
+	}, [setCountdown, setShowNextModal])
+
+	const saveProg = useCallback(async () => {
 		// Сохраняем в следующих случаях:
 		// 1. Прогресс увеличился (более чем на 1%)
 		// 2. Прогресс достиг важной отметки (25%, 50%, 75%, 80%, 100%)
@@ -344,9 +332,9 @@ export default function VideoDetailPage() {
 			console.error('Ошибка при сохранении прогресса:', error)
 			return false
 		}
-	}
+	}, [id, user, setProgress, setIsCompleted, setDebug])
 
-	const handleEnded = () => {
+	const handleEnded = useCallback(() => {
 		// Сохраняем прогресс без проверки результата
 		saveProg()
 
@@ -369,28 +357,7 @@ export default function VideoDetailPage() {
 				console.log('Нет информации о следующем уроке.')
 			}
 		})
-	}
-
-	const startNextVideoCountdown = () => {
-		setCountdown(5)
-		setShowNextModal(true)
-
-		if (countdownRef.current) {
-			clearInterval(countdownRef.current)
-		}
-
-		countdownRef.current = setInterval(() => {
-			setCountdown(prev => {
-				if (prev <= 1) {
-					if (countdownRef.current) {
-						clearInterval(countdownRef.current)
-					}
-					return 0
-				}
-				return prev - 1
-			})
-		}, 1000)
-	}
+	}, [saveProg, checkNextLesson, nextVideo, startNextVideoCountdown])
 
 	// Отслеживаем обратный отсчет и выполняем переход, когда он завершен
 	useEffect(() => {
@@ -436,15 +403,7 @@ export default function VideoDetailPage() {
 		setDisplayTime(`0:00 / ${formatTime(video.duration)}`)
 	}
 
-	const getDifficultyLabel = (difficulty: string): string => {
-		const labels = {
-			beginner: 'Начинающий',
-			intermediate: 'Средний',
-			advanced: 'Продвинутый',
-		}
-		return labels[difficulty as keyof typeof labels] || 'Неизвестно'
-	}
-
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const getDifficultyColor = (difficulty: string): string => {
 		const colors = {
 			beginner: 'bg-green-500',
@@ -507,20 +466,6 @@ export default function VideoDetailPage() {
 		}
 
 		animationFrameId.current = requestAnimationFrame(updateVideoProgress)
-	}
-
-	const handleTimeUpdate = () => {
-		if (!video || isNaN(video.duration) || video.duration === 0) return
-
-		const currentTime = video.currentTime
-		const duration = video.duration
-		const currentProgress = Math.floor((currentTime / duration) * 100)
-
-		// Обновляем максимальный прогресс, если текущий больше
-		maxProgressRef.current = Math.max(maxProgressRef.current, currentProgress)
-
-		// Всегда показываем максимальный прогресс
-		setProgress(maxProgressRef.current)
 	}
 
 	// Утилитарная функция для выполнения fetch с авторизацией
