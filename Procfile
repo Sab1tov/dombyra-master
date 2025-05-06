@@ -1,0 +1,1 @@
+web: cd backend && rm -f package-lock.json && npm install && node server.js 
