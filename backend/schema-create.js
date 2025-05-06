@@ -119,14 +119,29 @@ async function createTables() {
 		await pool.query(`
 			ALTER TABLE comments
 			ADD COLUMN IF NOT EXISTS video_id INTEGER REFERENCES video_lessons(id) ON DELETE CASCADE;
-			
-			-- Добавляем ограничение, чтобы комментарий был привязан только к одному типу контента
-			ALTER TABLE comments
-			ADD CONSTRAINT IF NOT EXISTS content_type_check
-			CHECK ((video_id IS NULL AND sheet_music_id IS NOT NULL) OR 
-						(video_id IS NOT NULL AND sheet_music_id IS NULL));
 		`)
 		console.log('✅ Таблица comments обновлена для поддержки видеоуроков')
+
+		// Добавляем ограничение, исправив синтаксическую ошибку
+		try {
+			await pool.query(`
+				ALTER TABLE comments
+				DROP CONSTRAINT IF EXISTS content_type_check;
+			`)
+
+			await pool.query(`
+				ALTER TABLE comments
+				ADD CONSTRAINT content_type_check 
+				CHECK ((video_id IS NULL AND sheet_music_id IS NOT NULL) OR 
+							(video_id IS NOT NULL AND sheet_music_id IS NULL));
+			`)
+			console.log('✅ Добавлено ограничение для таблицы comments')
+		} catch (constraintError) {
+			console.error(
+				'⚠️ Предупреждение при добавлении ограничения:',
+				constraintError.message
+			)
+		}
 
 		console.log('✅ Все таблицы успешно созданы или обновлены!')
 	} catch (error) {
