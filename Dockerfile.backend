@@ -12,7 +12,7 @@ COPY backend/package*.json ./
 RUN rm -rf node_modules
 
 # Устанавливаем все зависимости, включая bcrypt, с компиляцией
-RUN npm install --production
+RUN npm install
 
 # Копируем исходный код
 COPY backend/ ./
