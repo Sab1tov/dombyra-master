@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const path = require('path')
+const fs = require('fs')
 const pool = require('./db')
 require('dotenv').config()
 
@@ -24,9 +25,24 @@ const app = express()
 const PORT = process.env.PORT || 5000
 
 // Вывод информации о среде и переменных для диагностики
+console.log('---------------------------------------------------')
+console.log('ЗАПУСК СЕРВЕРА В ОКРУЖЕНИИ:')
 console.log('NODE_ENV:', process.env.NODE_ENV)
-console.log('DATABASE_URL настроен:', !!process.env.DATABASE_URL)
 console.log('PORT:', PORT)
+console.log(
+	'DATABASE_URL:',
+	process.env.DATABASE_URL ? 'УСТАНОВЛЕН' : 'НЕ УСТАНОВЛЕН'
+)
+console.log(
+	'CORS_ORIGIN:',
+	process.env.CORS_ORIGIN ||
+		'не установлен (будет использован домен по умолчанию)'
+)
+console.log(
+	'JWT_SECRET:',
+	process.env.JWT_SECRET ? 'УСТАНОВЛЕН' : 'НЕ УСТАНОВЛЕН'
+)
+console.log('---------------------------------------------------')
 
 // Настройка CORS с поддержкой доменов из переменной окружения
 const corsOptions = {
@@ -40,6 +56,20 @@ console.log('✅ CORS настроен для домена:', corsOptions.origin
 app.use(cors(corsOptions))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
+
+// Проверяем и создаем директорию для загрузки файлов
+const uploadsDir = path.join(__dirname, 'uploads')
+const avatarsDir = path.join(uploadsDir, 'avatars')
+
+if (!fs.existsSync(uploadsDir)) {
+	fs.mkdirSync(uploadsDir, { recursive: true })
+	console.log('Создана директория для загрузок:', uploadsDir)
+}
+
+if (!fs.existsSync(avatarsDir)) {
+	fs.mkdirSync(avatarsDir, { recursive: true })
+	console.log('Создана директория для аватаров:', avatarsDir)
+}
 
 // Добавляем маршруты - подключаем только существующие маршруты
 app.use('/api/auth', authRoutes)
@@ -116,6 +146,7 @@ app.get('/api/health', (req, res) => {
 					'postgresql://$1:***@'
 			  )
 			: 'not set',
+		current_time: new Date().toISOString(),
 	})
 })
 
@@ -132,9 +163,14 @@ app.get('/api/debug/env', (req, res) => {
 		node_env: process.env.NODE_ENV,
 		port: process.env.PORT,
 		database_url_set: !!process.env.DATABASE_URL,
+		database_url_parsed: process.env.DATABASE_URL
+			? new URL(process.env.DATABASE_URL).host
+			: null,
 		cors_origin: process.env.CORS_ORIGIN,
 		jwt_secret_set: !!process.env.JWT_SECRET,
 		db_connected: dbConnected,
+		server_time: new Date().toISOString(),
+		server_dir: __dirname,
 	})
 })
 
