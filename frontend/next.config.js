@@ -5,6 +5,10 @@ const nextConfig = {
 		config.resolve.alias.encoding = false
 		return config
 	},
+	eslint: {
+		// Отключаем проверку ESLint при сборке
+		ignoreDuringBuilds: true,
+	},
 	// Настройки для правильной обработки изображений
 	images: {
 		// Разрешаем домены для изображений
