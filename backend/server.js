@@ -5,6 +5,9 @@ const path = require('path')
 const pool = require('./db')
 require('dotenv').config()
 
+// Добавляем импорт функции createTables из schema-create.js
+const { createTables } = require('./schema-create')
+
 // Routes - исправляем пути к модулям
 const authRoutes = require('./routes/authRoutes')
 const videoLessonRoutes = require('./routes/videoLessonRoutes')
@@ -43,6 +46,13 @@ const checkDbConnection = async () => {
 	try {
 		const client = await pool.connect()
 		console.log('✅ Успешное подключение к PostgreSQL')
+
+		// В production среде автоматически создаем таблицы при запуске
+		if (process.env.NODE_ENV === 'production') {
+			console.log('Production среда, запускаем создание таблиц...')
+			await createTables()
+		}
+
 		client.release()
 	} catch (err) {
 		console.error('❌ Ошибка подключения к PostgreSQL:', err)
