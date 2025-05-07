@@ -578,16 +578,6 @@ export default function SheetMusicPage() {
 											>
 												Қарау
 											</Link>
-											{item.id && (
-												<a
-													href={`/api/sheet-music/${item.id}/download`}
-													target='_blank'
-													rel='noopener noreferrer'
-													className='px-4 py-2 bg-[#E4B87C] text-[#2A3F54] text-[15px] font-medium rounded-[20px] flex items-center justify-center ml-2'
-												>
-													Жүктеу
-												</a>
-											)}
 										</div>
 
 										<button
