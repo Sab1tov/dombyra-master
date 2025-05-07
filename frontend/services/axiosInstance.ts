@@ -22,7 +22,7 @@ const checkNetworkStatus = () => {
 }
 
 const api = axios.create({
-	baseURL: '/api', // Используем относительный путь для работы через прокси Next.js
+	baseURL: process.env.NEXT_PUBLIC_API_URL, // Используем абсолютный путь к backend
 	headers: {
 		'Content-Type': 'application/json',
 	},

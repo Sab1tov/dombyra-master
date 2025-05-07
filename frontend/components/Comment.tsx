@@ -37,7 +37,7 @@ const getAvatarUrl = (avatarPath: string | null): string => {
 	}
 
 	// Прямая ссылка на бэкенд
-	return `http://localhost:5000${avatarPath}`
+	return `${process.env.NEXT_PUBLIC_API_URL}${avatarPath}`
 }
 
 const Comment = ({

@@ -181,7 +181,7 @@ export default function UploadSheetMusicPage() {
 									name='title'
 									value={formData.title}
 									onChange={handleChange}
-									className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+									className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-900 ${
 										formErrors.title ? 'border-red-500' : 'border-gray-300'
 									}`}
 									placeholder='Нота атауын енгізіңіз'
@@ -206,7 +206,7 @@ export default function UploadSheetMusicPage() {
 									name='composer'
 									value={formData.composer}
 									onChange={handleChange}
-									className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+									className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-900 ${
 										formErrors.composer ? 'border-red-500' : 'border-gray-300'
 									}`}
 									placeholder='Композитор атын енгізіңіз'

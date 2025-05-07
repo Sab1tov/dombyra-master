@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 		}
 
 		// Формируем URL к бэкенду
-		const backendUrl = 'http://localhost:5000/api/auth/login'
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`
 		console.log(`[Login API] Sending request to backend: ${backendUrl}`)
 
 		// Выполняем запрос к бэкенду

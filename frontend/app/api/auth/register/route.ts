@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 		}
 
 		// Формируем URL к бэкенду
-		const backendUrl = 'http://localhost:5000/api/auth/register'
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`
 
 		// Логирование для отладки
 		console.log('Данные отправляемые на бэкенд:', JSON.stringify(body, null, 2))

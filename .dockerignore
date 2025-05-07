@@ -1,0 +1,35 @@
+# Node modules and npm debug logs
+**/node_modules
+**/npm-debug.log
+**/package-lock.json
+
+# Директории сборки
+frontend/.next
+frontend/out
+frontend/build
+frontend/dist
+
+# Git и CI/CD файлы
+.git
+.github
+.gitlab
+.gitignore
+.railway
+
+# Логи, кеши и временные файлы
+**/*.log
+**/logs
+**/.DS_Store
+**/.cache
+**/.npm
+**/Thumbs.db
+**/.temp
+
+# Загруженные пользователем файлы
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Тесты
+**/__tests__
+**/*.test.js
+**/*.spec.js 

@@ -9,7 +9,7 @@ export async function GET(
 		const id = params.id
 
 		// Формируем URL к бэкенду
-		const backendUrl = `http://localhost:5000/api/sheet-music/${id}`
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/sheet-music/${id}`
 
 		console.log(
 			`[Sheet Music API] Fetching sheet music ID ${id} from: ${backendUrl}`
@@ -66,7 +66,7 @@ export async function PUT(
 		const contentType = req.headers.get('content-type') || ''
 		if (contentType.includes('multipart/form-data')) {
 			const formData = await req.formData()
-			const backendUrl = `http://localhost:5000/api/sheet-music/${id}/file`
+			const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/sheet-music/${id}/file`
 
 			console.log(
 				`[Sheet Music API] Updating sheet music file ID ${id} to: ${backendUrl}`
@@ -96,7 +96,7 @@ export async function PUT(
 		// Если обычный JSON запрос, обновляем информацию
 		else {
 			const body = await req.json()
-			const backendUrl = `http://localhost:5000/api/sheet-music/${id}`
+			const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/sheet-music/${id}`
 
 			console.log(
 				`[Sheet Music API] Updating sheet music info ID ${id} to: ${backendUrl}`
@@ -152,7 +152,7 @@ export async function DELETE(
 		}
 
 		// Формируем URL к бэкенду
-		const backendUrl = `http://localhost:5000/api/sheet-music/${id}`
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/sheet-music/${id}`
 
 		console.log(
 			`[Sheet Music API] Deleting sheet music ID ${id} from: ${backendUrl}`

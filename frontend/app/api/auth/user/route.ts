@@ -15,11 +15,11 @@ export async function GET(req: NextRequest) {
 
 		// Список возможных URL для бэкенда - попробуем разные варианты
 		const backendUrls = [
-			'http://localhost:5000/api/auth/me', // Распространенный вариант
-			'http://localhost:5000/api/auth/user', // Тоже распространенный
-			'http://localhost:5000/api/user', // Еще один вариант
-			'http://localhost:5000/api/users/me', // Вариант с users
-			'http://localhost:5000/api/auth/profile', // Исходный вариант
+			`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
+			`${process.env.NEXT_PUBLIC_API_URL}/api/auth/user`,
+			`${process.env.NEXT_PUBLIC_API_URL}/api/user`,
+			`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`,
+			`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`,
 		]
 
 		// Последовательно пробуем каждый URL до первого успешного ответа
