@@ -14,7 +14,7 @@ export const metadata = {
 	title: 'Dombyra Master',
 	description: 'Қазақтың ұлттық аспабы - домбыраны үйренуге арналған платформа',
 	icons: {
-		icon: '/favicon.svg',
+		icon: '/favicon.ico',
 	},
 }
 
