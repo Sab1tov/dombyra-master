@@ -50,6 +50,15 @@ router.get('/', async (req, res) => {
 
 		let query, params
 
+		console.log('Запрос нот:', {
+			search,
+			page,
+			limit,
+			offset,
+			searchTerm,
+			userId,
+		})
+
 		// Если пользователь авторизован, добавляем информацию о его избранном
 		if (userId) {
 			query = `
@@ -67,10 +76,10 @@ router.get('/', async (req, res) => {
 					ORDER BY sm.created_at DESC
 					LIMIT $3 OFFSET $4
 				`
-				params.push(searchTerm, limit, offset)
+				params.push(searchTerm, parseInt(limit), offset)
 			} else {
 				query += `ORDER BY sm.created_at DESC LIMIT $2 OFFSET $3`
-				params.push(limit, offset)
+				params.push(parseInt(limit), offset)
 			}
 		} else {
 			// Для неавторизованных пользователей не показываем избранное
@@ -87,12 +96,14 @@ router.get('/', async (req, res) => {
 					ORDER BY sm.created_at DESC
 					LIMIT $2 OFFSET $3
 				`
-				params = [searchTerm, limit, offset]
+				params = [searchTerm, parseInt(limit), offset]
 			} else {
 				query += `ORDER BY sm.created_at DESC LIMIT $1 OFFSET $2`
-				params = [limit, offset]
+				params = [parseInt(limit), offset]
 			}
 		}
+
+		console.log('SQL-запрос нот:', { query, params })
 
 		const notes = await pool.query(query, params)
 
@@ -105,7 +116,7 @@ router.get('/', async (req, res) => {
 
 		res.json(updatedNotes)
 	} catch (error) {
-		console.error('Ошибка при получении нот с пагинацией:', error)
+		console.error('Ошибка при получении нот с пагинацией:', error, error.stack)
 		res.status(500).json({ error: 'Ошибка сервера' })
 	}
 })

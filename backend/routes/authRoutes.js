@@ -253,9 +253,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
 		}
 
 		updateQuery +=
-			' WHERE id = $' +
-			paramCount +
-			' RETURNING id, username, email, avatar_url AS avatar'
+			' WHERE id = $' + paramCount + ' RETURNING id, username, email, avatar_url AS avatar'
 		queryParams.push(req.user.id)
 
 		const updatedUser = await pool.query(updateQuery, queryParams)
