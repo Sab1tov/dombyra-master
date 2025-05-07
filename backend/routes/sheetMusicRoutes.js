@@ -107,12 +107,22 @@ router.get('/', async (req, res) => {
 
 		const notes = await pool.query(query, params)
 
-		const updatedNotes = notes.rows.map(note => ({
-			...note,
-			file_path: note.file_path
-				? `${process.env.BASE_URL}/${note.file_path}`
-				: null,
-		}))
+		// Фильтруем записи: если file_path есть, но файла нет на сервере — не включаем в выдачу
+		const updatedNotes = notes.rows
+			.filter(note => {
+				if (!note.file_path) return true
+				const fullPath = require('path').join(__dirname, '..', note.file_path)
+				return fs
+					.access(fullPath)
+					.then(() => true)
+					.catch(() => false)
+			})
+			.map(note => ({
+				...note,
+				file_path: note.file_path
+					? `${process.env.BASE_URL}/${note.file_path}`
+					: null,
+			}))
 
 		res.json(updatedNotes)
 	} catch (error) {
