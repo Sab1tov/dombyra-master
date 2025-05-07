@@ -10,6 +10,14 @@ const montserrat = Montserrat({
 	subsets: ['latin', 'cyrillic'],
 })
 
+export const metadata = {
+	title: 'Dombyra Master',
+	description: 'Қазақтың ұлттық аспабы - домбыраны үйренуге арналған платформа',
+	icons: {
+		icon: '/favicon.svg',
+	},
+}
+
 export default function RootLayout({
 	children,
 }: {
