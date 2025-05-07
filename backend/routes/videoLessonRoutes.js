@@ -216,6 +216,9 @@ router.post(
 				process.env.BASE_URL || 'http://localhost:5000'
 			}/${videoPath}`
 
+			console.log('BASE_URL при загрузке видео:', process.env.BASE_URL)
+			console.log('videoUrl для сохранения:', videoUrl)
+
 			// Получаем данные из формы
 			const { title, description, thumbnail_url, duration } = req.body
 			const userId = req.user.id

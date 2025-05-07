@@ -42,6 +42,10 @@ console.log(
 	'JWT_SECRET:',
 	process.env.JWT_SECRET ? 'УСТАНОВЛЕН' : 'НЕ УСТАНОВЛЕН'
 )
+console.log(
+	'BASE_URL:',
+	process.env.BASE_URL ? process.env.BASE_URL : 'НЕ УСТАНОВЛЕН'
+)
 console.log('---------------------------------------------------')
 
 // Настройка CORS с поддержкой доменов из переменной окружения
