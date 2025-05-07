@@ -321,38 +321,6 @@ export default function SheetMusicPage() {
 		}
 	}
 
-	// Функция для скачивания файла
-	const handleDownload = async (id: number, fileUrl: string, title: string) => {
-		if (!fileUrl) {
-			alert('Ошибка: URL файла не определен')
-			return
-		}
-
-		try {
-			// Если пользователь авторизован, отправляем запрос на увеличение счетчика скачиваний
-			if (user) {
-				try {
-					await api.post(`/sheet-music/${id}/download`)
-
-					// Обновляем локальный счетчик
-					setSheetMusic(
-						sheetMusic.map(item =>
-							item.id === id ? { ...item, downloads: item.downloads + 1 } : item
-						)
-					)
-				} catch (error) {
-					console.error('Ошибка при обновлении счетчика скачиваний:', error)
-				}
-			}
-
-			// Открываем файл для загрузки в новой вкладке
-			window.open(fileUrl, '_blank')
-		} catch (err) {
-			console.error('Ошибка при скачивании файла:', err)
-			alert('Ошибка при скачивании файла. Пожалуйста, попробуйте еще раз.')
-		}
-	}
-
 	// Заглушка для демонстрационных данных, если API недоступен
 	const loadDemoData = () => {
 		const demoSheetMusic: SheetMusicType[] = [
