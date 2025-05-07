@@ -271,7 +271,8 @@ router.get('/download/:id', async (req, res) => {
 			return res.status(404).json({ error: 'Файл отсутствует' })
 		}
 
-		const fullPath = path.join(__dirname, '..', filePath)
+		// Исправлено: всегда ищем файл в /data/sheet_music/ по имени файла
+		const fullPath = path.join('/data/sheet_music/', path.basename(filePath))
 
 		try {
 			await fs.access(fullPath)
