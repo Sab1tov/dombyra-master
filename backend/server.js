@@ -75,17 +75,6 @@ if (!fs.existsSync(avatarsDir)) {
 	console.log('Создана директория для аватаров:', avatarsDir)
 }
 
-// === [Автоматическое создание директорий для Volume Railway] ===
-const volumeDirs = ['/data/sheet_music', '/data/avatars', '/data/videos']
-
-for (const dir of volumeDirs) {
-	if (!fs.existsSync(dir)) {
-		fs.mkdirSync(dir, { recursive: true })
-		console.log('Создана директория для Volume:', dir)
-	}
-}
-// === [Конец блока создания директорий] ===
-
 // Добавляем маршруты - подключаем только существующие маршруты
 app.use('/api/auth', authRoutes)
 app.use('/api/video-lessons', videoLessonRoutes)
@@ -147,9 +136,6 @@ const checkDbConnection = async (retries = 5) => {
 
 // Добавление статической директории для загруженных файлов
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
-app.use('/uploads/avatars', express.static('/data/avatars'))
-app.use('/uploads/videos', express.static('/data/videos'))
-app.use('/uploads/sheet_music', express.static('/data/sheet_music'))
 
 // Для проверки работы API
 app.get('/api/health', (req, res) => {
@@ -191,6 +177,31 @@ app.get('/api/debug/env', (req, res) => {
 		server_dir: __dirname,
 	})
 })
+
+// === [Автоматическое добавление колонки parent_id в comments] ===
+async function ensureParentIdColumn() {
+	try {
+		const check = await pool.query(`
+			SELECT column_name
+			FROM information_schema.columns
+			WHERE table_name='comments' AND column_name='parent_id'
+		`)
+		if (check.rows.length === 0) {
+			await pool.query(`
+				ALTER TABLE comments
+				ADD COLUMN parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE
+			`)
+			console.log('✅ Колонка parent_id успешно добавлена в таблицу comments')
+		} else {
+			console.log('ℹ️ Колонка parent_id уже существует в таблице comments')
+		}
+	} catch (err) {
+		console.error('❌ Ошибка при добавлении колонки parent_id:', err.message)
+	}
+}
+
+ensureParentIdColumn()
+// === [Конец блока автоматического добавления колонки parent_id] ===
 
 // Запускаем сервер
 app.listen(PORT, () => {
