@@ -23,11 +23,6 @@ export default function SheetMusicPage() {
 	const [searchQuery, setSearchQuery] = useState<string>('')
 	const [showDifficultyDropdown, setShowDifficultyDropdown] = useState(false)
 
-	// Добавить состояния для пагинации
-	const [page, setPage] = useState(1)
-	const limit = 12
-	const [hasNextPage, setHasNextPage] = useState(false)
-
 	// Загрузка избранных элементов пользователя
 	useEffect(() => {
 		const fetchFavorites = async () => {
@@ -86,9 +81,7 @@ export default function SheetMusicPage() {
 				setLoading(true)
 				setError(null)
 
-				const response = await api.get('/sheet-music', {
-					params: { limit, page },
-				})
+				const response = await api.get('/sheet-music')
 
 				// Обработка данных - проверка как isFavorite, так и is_favorite из API
 				const processedData = response.data.map((item: any) => ({
@@ -103,9 +96,6 @@ export default function SheetMusicPage() {
 				setSheetMusic(processedData)
 				setFilteredSheetMusic(processedData)
 
-				// Проверяем, есть ли следующая страница
-				setHasNextPage(processedData.length === limit)
-
 				// Если избранные уже загружены, обновляем статус
 				if (favoritesLoaded && favoriteIds.length > 0) {
 					updateFavoritesStatus(favoriteIds)
@@ -119,7 +109,7 @@ export default function SheetMusicPage() {
 		}
 
 		fetchSheetMusic()
-	}, [favoritesLoaded])
+	}, [favoritesLoaded, sheetMusic])
 
 	// Фильтрация нот при изменении фильтров
 	useEffect(() => {
@@ -629,24 +619,6 @@ export default function SheetMusicPage() {
 							))}
 						</div>
 					)}
-
-					{/* Пагинация */}
-					<div className='flex justify-center mt-8 gap-4'>
-						<button
-							onClick={() => setPage(page - 1)}
-							disabled={page === 1}
-							className='px-6 py-2 rounded-[20px] bg-[#E4B87C] text-[#2A3F54] font-medium disabled:opacity-50 disabled:cursor-not-allowed'
-						>
-							Артқа
-						</button>
-						<button
-							onClick={() => setPage(page + 1)}
-							disabled={!hasNextPage}
-							className='px-6 py-2 rounded-[20px] bg-[#E4B87C] text-[#2A3F54] font-medium disabled:opacity-50 disabled:cursor-not-allowed'
-						>
-							Алға
-						</button>
-					</div>
 				</div>
 			</div>
 		</div>
