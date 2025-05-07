@@ -81,7 +81,9 @@ export default function SheetMusicPage() {
 				setLoading(true)
 				setError(null)
 
-				const response = await api.get('/sheet-music')
+				const response = await api.get('/sheet-music', {
+					params: { limit: 30 },
+				})
 
 				// Обработка данных - проверка как isFavorite, так и is_favorite из API
 				const processedData = response.data.map((item: any) => ({
