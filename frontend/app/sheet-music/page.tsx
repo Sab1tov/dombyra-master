@@ -10,13 +10,12 @@ import { useEffect, useState } from 'react'
 export default function SheetMusicPage() {
 	const { user } = useAuthStore()
 	const [sheetMusic, setSheetMusic] = useState<SheetMusicType[]>([])
-	const [filteredSheetMusic, setFilteredSheetMusic] = useState<
-		SheetMusicType[]
-	>([])
 	const [loading, setLoading] = useState(true)
 	const [favoritesLoaded, setFavoritesLoaded] = useState(false)
 	const [favoriteIds, setFavoriteIds] = useState<number[]>([])
 	const [error, setError] = useState<string | null>(null)
+	const [page, setPage] = useState(1)
+	const limit = 12
 
 	// Фильтры
 	const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
@@ -81,7 +80,12 @@ export default function SheetMusicPage() {
 				setLoading(true)
 				setError(null)
 
-				const response = await api.get('/sheet-music')
+				const params: Record<string, string | number> = {
+					page,
+					limit,
+				}
+
+				const response = await api.get('/sheet-music', { params })
 
 				// Обработка данных - проверка как isFavorite, так и is_favorite из API
 				const processedData = response.data.map((item: any) => ({
@@ -94,7 +98,6 @@ export default function SheetMusicPage() {
 
 				console.log('Список нот с проверкой избранного:', processedData)
 				setSheetMusic(processedData)
-				setFilteredSheetMusic(processedData)
 
 				// Если избранные уже загружены, обновляем статус
 				if (favoritesLoaded && favoriteIds.length > 0) {
@@ -109,42 +112,7 @@ export default function SheetMusicPage() {
 		}
 
 		fetchSheetMusic()
-	}, [favoritesLoaded])
-
-	// Фильтрация нот при изменении фильтров
-	useEffect(() => {
-		let result = [...sheetMusic]
-
-		// Фильтрация по сложности
-		if (selectedDifficulty !== 'all') {
-			result = result.filter(item => item.difficulty === selectedDifficulty)
-		}
-
-		// Фильтрация по поисковому запросу
-		if (searchQuery) {
-			const query = searchQuery.toLowerCase()
-			result = result.filter(
-				item =>
-					(item.title && item.title.toLowerCase().includes(query)) ||
-					(item.description &&
-						item.description.toLowerCase().includes(query)) ||
-					(item.authorName && item.authorName.toLowerCase().includes(query)) ||
-					(item.composer && item.composer.toLowerCase().includes(query)) ||
-					(item.tags &&
-						Array.isArray(item.tags) &&
-						item.tags.some(tag => tag && tag.toLowerCase().includes(query)))
-			)
-		}
-
-		// Сортируем по новизне
-		result.sort(
-			(a, b) =>
-				new Date(b.createdAt || Date.now()).getTime() -
-				new Date(a.createdAt || Date.now()).getTime()
-		)
-
-		setFilteredSheetMusic(result)
-	}, [sheetMusic, selectedDifficulty, searchQuery])
+	}, [favoritesLoaded, page, limit])
 
 	// Обработчик добавления/удаления из избранного
 	const handleFavoriteToggle = async (id: number, isFavorite: boolean) => {
@@ -321,6 +289,38 @@ export default function SheetMusicPage() {
 		}
 	}
 
+	// Функция для скачивания файла
+	const handleDownload = async (id: number, fileUrl: string, title: string) => {
+		if (!fileUrl) {
+			alert('Ошибка: URL файла не определен')
+			return
+		}
+
+		try {
+			// Если пользователь авторизован, отправляем запрос на увеличение счетчика скачиваний
+			if (user) {
+				try {
+					await api.post(`/sheet-music/${id}/download`)
+
+					// Обновляем локальный счетчик
+					setSheetMusic(
+						sheetMusic.map(item =>
+							item.id === id ? { ...item, downloads: item.downloads + 1 } : item
+						)
+					)
+				} catch (error) {
+					console.error('Ошибка при обновлении счетчика скачиваний:', error)
+				}
+			}
+
+			// Открываем файл для загрузки в новой вкладке
+			window.open(fileUrl, '_blank')
+		} catch (err) {
+			console.error('Ошибка при скачивании файла:', err)
+			alert('Ошибка при скачивании файла. Пожалуйста, попробуйте еще раз.')
+		}
+	}
+
 	// Заглушка для демонстрационных данных, если API недоступен
 	const loadDemoData = () => {
 		const demoSheetMusic: SheetMusicType[] = [
@@ -433,7 +433,6 @@ export default function SheetMusicPage() {
 		}))
 
 		setSheetMusic(processedData)
-		setFilteredSheetMusic(processedData)
 		setLoading(false)
 	}
 
@@ -449,6 +448,22 @@ export default function SheetMusicPage() {
 			return () => clearTimeout(timer)
 		}
 	}, [loading, sheetMusic])
+
+	// Получение уникальных значений для фильтров
+	const difficulties = ['all', 'beginner', 'intermediate', 'advanced']
+
+	// Словарь для перевода сложности
+	const difficultyLabels: Record<string, string> = {
+		beginner: 'Бастауыш',
+		intermediate: 'Орташа',
+		advanced: 'Күрделі',
+		all: 'Барлық деңгей',
+	}
+
+	// Функция для получения метки сложности
+	const getDifficultyLabel = (difficultyKey: string): string => {
+		return difficultyLabels[difficultyKey] || difficultyKey
+	}
 
 	return (
 		<div className='bg-gray-50 min-h-screen'>
@@ -533,7 +548,7 @@ export default function SheetMusicPage() {
 					)}
 
 					{/* Карточки с нотами */}
-					{!loading && filteredSheetMusic.length === 0 ? (
+					{!loading && sheetMusic.length === 0 ? (
 						<div className='bg-white shadow-md rounded-lg p-8 text-center'>
 							<p className='text-lg text-gray-600'>
 								Нет доступных нот по заданным критериям.
@@ -541,7 +556,7 @@ export default function SheetMusicPage() {
 						</div>
 					) : (
 						<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-							{filteredSheetMusic.map(item => (
+							{sheetMusic.map(item => (
 								<div
 									key={item.id}
 									className='bg-white rounded-[20px] shadow-md overflow-hidden p-6 flex flex-col'
@@ -603,6 +618,25 @@ export default function SheetMusicPage() {
 							))}
 						</div>
 					)}
+
+					{/* Кнопки пагинации */}
+					<div className='flex justify-center mt-8 gap-4'>
+						<button
+							disabled={page === 1}
+							onClick={() => setPage(page - 1)}
+							className='px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50'
+						>
+							Артқа
+						</button>
+						<span className='px-4 py-2'>{page}</span>
+						<button
+							disabled={sheetMusic.length < limit}
+							onClick={() => setPage(page + 1)}
+							className='px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50'
+						>
+							Алға
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
