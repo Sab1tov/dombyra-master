@@ -443,22 +443,6 @@ export default function SheetMusicPage() {
 		}
 	}, [loading, sheetMusic])
 
-	// Получение уникальных значений для фильтров
-	const difficulties = ['all', 'beginner', 'intermediate', 'advanced']
-
-	// Словарь для перевода сложности
-	const difficultyLabels: Record<string, string> = {
-		beginner: 'Бастауыш',
-		intermediate: 'Орташа',
-		advanced: 'Күрделі',
-		all: 'Барлық деңгей',
-	}
-
-	// Функция для получения метки сложности
-	const getDifficultyLabel = (difficultyKey: string): string => {
-		return difficultyLabels[difficultyKey] || difficultyKey
-	}
-
 	return (
 		<div className='bg-gray-50 min-h-screen'>
 			<div className='container mx-auto px-4 py-8'>
@@ -612,24 +596,6 @@ export default function SheetMusicPage() {
 							))}
 						</div>
 					)}
-
-					{/* Кнопки пагинации под списком нот */}
-					<div className='flex justify-center mt-8 gap-4'>
-						<button
-							onClick={() => setPage(page - 1)}
-							disabled={page === 1}
-							className='px-6 py-2 rounded-[20px] bg-[#E4B87C] text-[#2A3F54] font-medium disabled:opacity-50 disabled:cursor-not-allowed'
-						>
-							Артқа
-						</button>
-						<button
-							onClick={() => setPage(page + 1)}
-							disabled={!hasNextPage}
-							className='px-6 py-2 rounded-[20px] bg-[#E4B87C] text-[#2A3F54] font-medium disabled:opacity-50 disabled:cursor-not-allowed'
-						>
-							Алға
-						</button>
-					</div>
 				</div>
 			</div>
 		</div>
