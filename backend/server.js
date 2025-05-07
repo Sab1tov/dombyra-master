@@ -138,9 +138,9 @@ const checkDbConnection = async (retries = 5) => {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 // Добавление статической директории для загруженных файлов из Volume Railway
-app.use('/uploads/avatars', express.static('/data/avatars'));
-app.use('/uploads/videos', express.static('/data/videos'));
-app.use('/uploads/sheet_music', express.static('/data/sheet_music'));
+app.use('/uploads/avatars', express.static('/data/avatars'))
+app.use('/uploads/videos', express.static('/data/videos'))
+app.use('/uploads/sheet_music', express.static('/data/sheet_music'))
 
 // Для проверки работы API
 app.get('/api/health', (req, res) => {

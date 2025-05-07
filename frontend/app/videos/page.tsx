@@ -35,180 +35,163 @@ const debounce = (func: (showLoading?: boolean) => void, wait: number) => {
 }
 
 interface VideoCardProps {
-	lesson: VideoLessonType;
-	index: number;
-	updatedVideoIds: number[];
+	lesson: VideoLessonType
+	index: number
+	updatedVideoIds: number[]
 }
 
 // Отдельный мемоизированный компонент для карточки видео
-const VideoCard: React.FC<VideoCardProps> = React.memo(({ lesson, index, updatedVideoIds }) => {
-	return (
-		<div
-			className={`rounded-[15px] shadow-md overflow-hidden transition-all ${
-				updatedVideoIds.includes(lesson.id)
-					? 'ring-4 ring-blue-400 transform scale-[1.02]'
-					: ''
-			} ${
-				lesson.isCompleted
-					? 'bg-green-50 border border-green-200'
-					: lesson.progress === undefined || lesson.progress === 0
-					? 'bg-white'
-					: lesson.progress < 25
-					? 'bg-blue-50 border border-blue-100'
-					: lesson.progress < 50
-					? 'bg-yellow-50 border border-yellow-100'
-					: lesson.progress < 80
-					? 'bg-orange-50 border border-orange-100'
-					: 'bg-green-50 border border-green-200'
-			}`}
-		>
-			<div className='relative'>
-				<div className='h-1 w-full bg-gray-200'>
-					<div
-						className={`h-full transition-all duration-300 ${
-							lesson.isCompleted ? 'bg-green-500' : 'bg-blue-600'
-						}`}
-						style={{ width: `${lesson.progress || 0}%` }}
-					></div>
-				</div>
-			</div>
-
-			<Link
-				href={`/videos/${lesson.id}`}
-				className={`block relative transition-all ${
-					lesson.isLocked
-						? 'opacity-70 cursor-not-allowed'
-						: lesson.isCompleted
-						? 'hover:bg-green-100'
-						: lesson.progress !== undefined && lesson.progress >= 50
-						? 'hover:bg-orange-100'
-						: lesson.progress !== undefined && lesson.progress >= 25
-						? 'hover:bg-yellow-100'
-						: lesson.progress !== undefined && lesson.progress > 0
-						? 'hover:bg-blue-100'
-						: 'hover:bg-[#f8f4f0]'
+const VideoCard: React.FC<VideoCardProps> = React.memo(
+	({ lesson, index, updatedVideoIds }) => {
+		return (
+			<div
+				className={`rounded-[15px] shadow-md overflow-hidden transition-all ${
+					updatedVideoIds.includes(lesson.id)
+						? 'ring-4 ring-blue-400 transform scale-[1.02]'
+						: ''
+				} ${
+					lesson.isCompleted
+						? 'bg-green-50 border border-green-200'
+						: lesson.progress === undefined || lesson.progress === 0
+						? 'bg-white'
+						: lesson.progress < 25
+						? 'bg-blue-50 border border-blue-100'
+						: lesson.progress < 50
+						? 'bg-yellow-50 border border-yellow-100'
+						: lesson.progress < 80
+						? 'bg-orange-50 border border-orange-100'
+						: 'bg-green-50 border border-green-200'
 				}`}
-				onClick={e => {
-					if (lesson.isLocked) {
-						e.preventDefault()
-					}
-				}}
 			>
-				<div className='flex items-center p-4'>
-					<div className='relative mr-4'>
-						{lesson.progress !== undefined && lesson.progress > 0 && (
-							<svg
-								className='absolute -top-1 -left-1 w-14 h-14'
-								viewBox='0 0 36 36'
-							>
-								<circle
-									cx='18'
-									cy='18'
-									r='16'
-									fill='none'
-									className={`stroke-2 ${
-										lesson.isCompleted
-											? 'stroke-green-500'
-											: lesson.progress < 25
-											? 'stroke-blue-500'
-											: lesson.progress < 50
-											? 'stroke-yellow-500'
-											: lesson.progress < 80
-											? 'stroke-orange-500'
-											: 'stroke-green-500'
-									}`}
-									strokeDasharray='100'
-									strokeDashoffset={100 - lesson.progress}
-									transform='rotate(-90 18 18)'
-								/>
-							</svg>
-						)}
+				<div className='relative'>
+					<div className='h-1 w-full bg-gray-200'>
 						<div
-							className={`w-12 h-12 flex-shrink-0 text-white rounded-full flex items-center justify-center text-xl font-bold ${
-								lesson.isCompleted
-									? 'bg-green-500'
-									: lesson.progress === undefined || lesson.progress === 0
-									? 'bg-[#2A3F54]'
-									: lesson.progress < 25
-									? 'bg-blue-500'
-									: lesson.progress < 50
-									? 'bg-yellow-500'
-									: lesson.progress < 80
-									? 'bg-orange-500'
-									: 'bg-green-500'
+							className={`h-full transition-all duration-300 ${
+								lesson.isCompleted ? 'bg-green-500' : 'bg-blue-600'
 							}`}
-						>
-							{index + 1}
-						</div>
+							style={{ width: `${lesson.progress || 0}%` }}
+						></div>
 					</div>
+				</div>
 
-					<div className='flex-grow'>
-						<h3 className='text-[22px] font-semibold text-[#2A3F54] flex items-center flex-wrap'>
-							{lesson.title}
-							{lesson.isCompleted && (
-								<span className='ml-2 bg-green-100 text-green-800 font-bold px-2 py-1 rounded-md text-sm flex items-center'>
-									<svg
-										className='w-4 h-4 mr-1'
+				<Link
+					href={`/videos/${lesson.id}`}
+					className={`block relative transition-all ${
+						lesson.isLocked
+							? 'opacity-70 cursor-not-allowed'
+							: lesson.isCompleted
+							? 'hover:bg-green-100'
+							: lesson.progress !== undefined && lesson.progress >= 50
+							? 'hover:bg-orange-100'
+							: lesson.progress !== undefined && lesson.progress >= 25
+							? 'hover:bg-yellow-100'
+							: lesson.progress !== undefined && lesson.progress > 0
+							? 'hover:bg-blue-100'
+							: 'hover:bg-[#f8f4f0]'
+					}`}
+					onClick={e => {
+						if (lesson.isLocked) {
+							e.preventDefault()
+						}
+					}}
+				>
+					<div className='flex items-center p-4'>
+						<div className='relative mr-4'>
+							{lesson.progress !== undefined && lesson.progress > 0 && (
+								<svg
+									className='absolute -top-1 -left-1 w-14 h-14'
+									viewBox='0 0 36 36'
+								>
+									<circle
+										cx='18'
+										cy='18'
+										r='16'
 										fill='none'
-										stroke='currentColor'
-										viewBox='0 0 24 24'
-									>
-										<path
-											strokeLinecap='round'
-											strokeLinejoin='round'
-											strokeWidth='2'
-											d='M5 13l4 4L19 7'
-										></path>
-									</svg>
-									Қаралды
-								</span>
-							)}
-							{lesson.progress !== undefined &&
-								lesson.progress > 0 &&
-								!lesson.isCompleted && (
-									<span
-										className={`ml-2 text-sm font-semibold px-3 py-1 rounded-full shadow-sm ${
-											lesson.progress < 25
-												? 'bg-blue-100 text-blue-600'
+										className={`stroke-2 ${
+											lesson.isCompleted
+												? 'stroke-green-500'
+												: lesson.progress < 25
+												? 'stroke-blue-500'
 												: lesson.progress < 50
-												? 'bg-yellow-100 text-yellow-600'
+												? 'stroke-yellow-500'
 												: lesson.progress < 80
-												? 'bg-orange-100 text-orange-600'
-												: 'bg-green-100 text-green-600'
+												? 'stroke-orange-500'
+												: 'stroke-green-500'
 										}`}
-									>
-										{lesson.progress < 25
-											? 'Басталды'
-											: lesson.progress < 50
-											? 'Үрдісте'
-											: lesson.progress < 80
-											? 'Аяқталып жатыр'
-											: 'Қаралды'}{' '}
-										{Math.round(lesson.progress)}%
+										strokeDasharray='100'
+										strokeDashoffset={100 - lesson.progress}
+										transform='rotate(-90 18 18)'
+									/>
+								</svg>
+							)}
+							<div
+								className={`w-12 h-12 flex-shrink-0 text-white rounded-full flex items-center justify-center text-xl font-bold ${
+									lesson.isCompleted
+										? 'bg-green-500'
+										: lesson.progress === undefined || lesson.progress === 0
+										? 'bg-[#2A3F54]'
+										: lesson.progress < 25
+										? 'bg-blue-500'
+										: lesson.progress < 50
+										? 'bg-yellow-500'
+										: lesson.progress < 80
+										? 'bg-orange-500'
+										: 'bg-green-500'
+								}`}
+							>
+								{index + 1}
+							</div>
+						</div>
+
+						<div className='flex-grow'>
+							<h3 className='text-[22px] font-semibold text-[#2A3F54] flex items-center flex-wrap'>
+								{lesson.title}
+								{lesson.isCompleted && (
+									<span className='ml-2 bg-green-100 text-green-800 font-bold px-2 py-1 rounded-md text-sm flex items-center'>
+										<svg
+											className='w-4 h-4 mr-1'
+											fill='none'
+											stroke='currentColor'
+											viewBox='0 0 24 24'
+										>
+											<path
+												strokeLinecap='round'
+												strokeLinejoin='round'
+												strokeWidth='2'
+												d='M5 13l4 4L19 7'
+											></path>
+										</svg>
+										Қаралды
 									</span>
 								)}
-						</h3>
+								{lesson.progress !== undefined &&
+									lesson.progress > 0 &&
+									!lesson.isCompleted && (
+										<span
+											className={`ml-2 text-sm font-semibold px-3 py-1 rounded-full shadow-sm ${
+												lesson.progress < 25
+													? 'bg-blue-100 text-blue-600'
+													: lesson.progress < 50
+													? 'bg-yellow-100 text-yellow-600'
+													: lesson.progress < 80
+													? 'bg-orange-100 text-orange-600'
+													: 'bg-green-100 text-green-600'
+											}`}
+										>
+											{lesson.progress < 25
+												? 'Басталды'
+												: lesson.progress < 50
+												? 'Үрдісте'
+												: lesson.progress < 80
+												? 'Аяқталып жатыр'
+												: 'Қаралды'}{' '}
+											{Math.round(lesson.progress)}%
+										</span>
+									)}
+							</h3>
 
-						<div className='flex items-center mt-2 text-sm text-[#5A6C7F]'>
-							<span className='flex items-center mr-4'>
-								<svg
-									className='w-4 h-4 mr-1'
-									fill='none'
-									stroke='currentColor'
-									viewBox='0 0 24 24'
-								>
-									<path
-										strokeLinecap='round'
-										strokeLinejoin='round'
-										strokeWidth='2'
-										d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
-									></path>
-								</svg>
-								{Math.floor(lesson.duration / 60)} мин
-							</span>
-
-							{(lesson.progress || 0) > 0 && (
-								<span className='flex items-center'>
+							<div className='flex items-center mt-2 text-sm text-[#5A6C7F]'>
+								<span className='flex items-center mr-4'>
 									<svg
 										className='w-4 h-4 mr-1'
 										fill='none'
@@ -219,95 +202,74 @@ const VideoCard: React.FC<VideoCardProps> = React.memo(({ lesson, index, updated
 											strokeLinecap='round'
 											strokeLinejoin='round'
 											strokeWidth='2'
-											d='M19 9l-7 7-7-7'
+											d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
 										></path>
 									</svg>
-									<span
-										className={`font-medium ${
-											lesson.isCompleted ? 'text-green-600' : 'text-blue-600'
-										}`}
-									>
-										{lesson.isCompleted
-											? 'Қаралды'
-											: `${lesson.progress || 0}% қаралды`}
-									</span>
+									{Math.floor(lesson.duration / 60)} мин
 								</span>
-							)}
-						</div>
-					</div>
 
-					<div className='ml-4 flex items-center'>
-						{lesson.progress !== undefined && lesson.progress > 0 && (
-							<div
-								className={`text-center mr-3 bg-gray-50 rounded-lg p-2 border transition-all ${
-									updatedVideoIds.includes(lesson.id)
-										? 'animate-pulse border-blue-400'
-										: ''
-								}`}
-							>
+								{(lesson.progress || 0) > 0 && (
+									<span className='flex items-center'>
+										<svg
+											className='w-4 h-4 mr-1'
+											fill='none'
+											stroke='currentColor'
+											viewBox='0 0 24 24'
+										>
+											<path
+												strokeLinecap='round'
+												strokeLinejoin='round'
+												strokeWidth='2'
+												d='M19 9l-7 7-7-7'
+											></path>
+										</svg>
+										<span
+											className={`font-medium ${
+												lesson.isCompleted ? 'text-green-600' : 'text-blue-600'
+											}`}
+										>
+											{lesson.isCompleted
+												? 'Қаралды'
+												: `${lesson.progress || 0}% қаралды`}
+										</span>
+									</span>
+								)}
+							</div>
+						</div>
+
+						<div className='ml-4 flex items-center'>
+							{lesson.progress !== undefined && lesson.progress > 0 && (
 								<div
-									className={`text-3xl font-bold ${
-										lesson.isCompleted
-											? 'text-green-600'
-											: lesson.progress < 25
-											? 'text-blue-600'
-											: lesson.progress < 50
-											? 'text-yellow-600'
-											: lesson.progress < 80
-											? 'text-orange-600'
-											: 'text-green-600'
+									className={`text-center mr-3 bg-gray-50 rounded-lg p-2 border transition-all ${
+										updatedVideoIds.includes(lesson.id)
+											? 'animate-pulse border-blue-400'
+											: ''
 									}`}
 								>
-									{lesson.isCompleted ? '✓' : Math.round(lesson.progress)}
-									{!lesson.isCompleted && '%'}
-								</div>
-								<div className='text-xs text-gray-500'>
-									{lesson.isCompleted ? 'қаралды' : 'қаралды'}
-								</div>
-							</div>
-						)}
-
-						{lesson.isLocked && (
-							<div className='p-3 bg-gray-100 rounded-full'>
-								<svg
-									className='w-6 h-6 text-gray-400'
-									fill='none'
-									stroke='currentColor'
-									viewBox='0 0 24 24'
-									xmlns='http://www.w3.org/2000/svg'
-								>
-									<path
-										strokeLinecap='round'
-										strokeLinejoin='round'
-										strokeWidth={2}
-										d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
-									></path>
-								</svg>
-							</div>
-						)}
-
-						{!lesson.isLocked && (
-							<div
-								className={`p-3 rounded-full ${
-									lesson.isCompleted ? 'bg-green-100' : 'bg-gray-100'
-								}`}
-							>
-								{lesson.isCompleted ? (
-									<svg
-										className='w-6 h-6 text-green-600'
-										fill='none'
-										stroke='currentColor'
-										viewBox='0 0 24 24'
-										xmlns='http://www.w3.org/2000/svg'
+									<div
+										className={`text-3xl font-bold ${
+											lesson.isCompleted
+												? 'text-green-600'
+												: lesson.progress < 25
+												? 'text-blue-600'
+												: lesson.progress < 50
+												? 'text-yellow-600'
+												: lesson.progress < 80
+												? 'text-orange-600'
+												: 'text-green-600'
+										}`}
 									>
-										<path
-											strokeLinecap='round'
-											strokeLinejoin='round'
-											strokeWidth={2}
-											d='M5 13l4 4L19 7'
-										></path>
-									</svg>
-								) : (
+										{lesson.isCompleted ? '✓' : Math.round(lesson.progress)}
+										{!lesson.isCompleted && '%'}
+									</div>
+									<div className='text-xs text-gray-500'>
+										{lesson.isCompleted ? 'қаралды' : 'қаралды'}
+									</div>
+								</div>
+							)}
+
+							{lesson.isLocked && (
+								<div className='p-3 bg-gray-100 rounded-full'>
 									<svg
 										className='w-6 h-6 text-gray-400'
 										fill='none'
@@ -319,29 +281,69 @@ const VideoCard: React.FC<VideoCardProps> = React.memo(({ lesson, index, updated
 											strokeLinecap='round'
 											strokeLinejoin='round'
 											strokeWidth={2}
-											d='M9 5l7 7-7 7'
+											d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
 										></path>
 									</svg>
-								)}
-							</div>
-						)}
+								</div>
+							)}
+
+							{!lesson.isLocked && (
+								<div
+									className={`p-3 rounded-full ${
+										lesson.isCompleted ? 'bg-green-100' : 'bg-gray-100'
+									}`}
+								>
+									{lesson.isCompleted ? (
+										<svg
+											className='w-6 h-6 text-green-600'
+											fill='none'
+											stroke='currentColor'
+											viewBox='0 0 24 24'
+											xmlns='http://www.w3.org/2000/svg'
+										>
+											<path
+												strokeLinecap='round'
+												strokeLinejoin='round'
+												strokeWidth={2}
+												d='M5 13l4 4L19 7'
+											></path>
+										</svg>
+									) : (
+										<svg
+											className='w-6 h-6 text-gray-400'
+											fill='none'
+											stroke='currentColor'
+											viewBox='0 0 24 24'
+											xmlns='http://www.w3.org/2000/svg'
+										>
+											<path
+												strokeLinecap='round'
+												strokeLinejoin='round'
+												strokeWidth={2}
+												d='M9 5l7 7-7 7'
+											></path>
+										</svg>
+									)}
+								</div>
+							)}
+						</div>
+					</div>
+				</Link>
+
+				<div className='relative'>
+					<div className='h-1 w-full bg-gray-200'>
+						<div
+							className={`h-full transition-all duration-300 ${
+								lesson.isCompleted ? 'bg-green-500' : 'bg-blue-600'
+							}`}
+							style={{ width: `${lesson.progress || 0}%` }}
+						></div>
 					</div>
 				</div>
-			</Link>
-
-			<div className='relative'>
-				<div className='h-1 w-full bg-gray-200'>
-					<div
-						className={`h-full transition-all duration-300 ${
-							lesson.isCompleted ? 'bg-green-500' : 'bg-blue-600'
-						}`}
-						style={{ width: `${lesson.progress || 0}%` }}
-					></div>
-				</div>
 			</div>
-		</div>
-	)
-})
+		)
+	}
+)
 
 // Установим displayName для компонента (полезно для инструментов разработчика)
 VideoCard.displayName = 'VideoCard'
@@ -608,20 +610,20 @@ export default function VideosPage() {
 								className={`w-4 h-4 mr-1 ${
 									isRefreshingRef.current ? 'animate-spin' : ''
 								}`}
-														fill='none'
+								fill='none'
 								stroke='currentColor'
-													viewBox='0 0 24 24'
-												>
-													<path
-														strokeLinecap='round'
-														strokeLinejoin='round'
-														strokeWidth='2'
+								viewBox='0 0 24 24'
+							>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									strokeWidth='2'
 									d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
-													/>
-												</svg>
+								/>
+							</svg>
 							{isRefreshingRef.current ? 'Обновляется...' : 'Обновить данные'}
 						</button>
-											</div>
+					</div>
 
 					<div className='space-y-6'>
 						<h2 className='text-[30px] font-bold text-[#2A3F54] mb-4'>
