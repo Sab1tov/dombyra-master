@@ -14,7 +14,7 @@ export async function GET(
 		const fullPath = params.path.join('/')
 
 		// Формируем URL к бэкенду
-		const backendUrl = `http://localhost:5000/${fullPath}`
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/${fullPath}`
 
 		console.log(`Проксирование запроса к: ${backendUrl}`)
 

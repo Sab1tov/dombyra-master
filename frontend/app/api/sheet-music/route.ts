@@ -10,7 +10,9 @@ export async function GET(req: NextRequest) {
 		const limit = url.searchParams.get('limit') || '10'
 
 		// Формируем URL к бэкенду с параметрами
-		const backendUrl = `http://localhost:5000/api/sheet-music?search=${encodeURIComponent(
+		const backendUrl = `${
+			process.env.NEXT_PUBLIC_API_URL
+		}/api/sheet-music?search=${encodeURIComponent(
 			searchQuery
 		)}&page=${page}&limit=${limit}`
 

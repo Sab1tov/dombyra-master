@@ -24,7 +24,7 @@ const getAvatarUrl = (avatarPath: string | null): string => {
 	}
 
 	// Иначе это относительный путь, добавляем базовый URL API
-	return `http://localhost:5000${avatarPath}`
+	return `${process.env.NEXT_PUBLIC_API_URL}${avatarPath}`
 }
 
 export default function EditProfilePage() {
