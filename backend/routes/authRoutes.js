@@ -273,11 +273,12 @@ router.put('/profile', authenticateToken, async (req, res) => {
 router.delete('/profile/avatar', authenticateToken, async (req, res) => {
 	try {
 		// Получаем текущего пользователя
-		const user = await pool.query('SELECT avatar FROM users WHERE id = $1', [
-			req.user.id,
-		])
+		const userAvatar = await pool.query(
+			'SELECT avatar_url AS avatar FROM users WHERE id = $1',
+			[req.user.id]
+		)
 
-		const avatarPath = user.rows[0]?.avatar
+		const avatarPath = userAvatar.rows[0]?.avatar
 
 		// Если аватар существует
 		if (avatarPath) {
