@@ -29,7 +29,8 @@ const nextConfig = {
 	async rewrites() {
 		// Функция для обеспечения наличия https:// в URL
 		const ensureHttps = url => {
-			if (!url) return 'http://localhost:5000'
+			if (!url)
+				return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 			if (url.startsWith('http://') || url.startsWith('https://')) {
 				return url
 			}

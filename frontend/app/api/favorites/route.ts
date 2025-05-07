@@ -15,9 +15,9 @@ export async function GET(request: NextRequest) {
 	try {
 		// Список возможных API-маршрутов для получения избранного
 		const possibleBackendUrls = [
-			'http://localhost:5000/api/favorites',
-			'http://localhost:5000/api/auth/favorites',
-			'http://localhost:5000/api/user/favorites',
+			`${process.env.NEXT_PUBLIC_API_URL}/api/favorites`,
+			`${process.env.NEXT_PUBLIC_API_URL}/api/auth/favorites`,
+			`${process.env.NEXT_PUBLIC_API_URL}/api/user/favorites`,
 		]
 
 		let lastError = null
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
 		console.log(`🔄 Добавление в избранное: ID=${itemId}, Type=${itemType}`)
 
 		// Url для добавления в избранное
-		const backendUrl = 'http://localhost:5000/api/favorites'
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/favorites`
 		console.log(`🔗 Отправка запроса на бэкенд: ${backendUrl}`)
 
 		// Подготавливаем данные в формате, который ожидает бэкенд
@@ -245,7 +245,7 @@ export async function DELETE(request: NextRequest) {
 		)
 
 		// Url для удаления из избранного
-		const backendUrl = `http://localhost:5000/api/favorites/${numericId}?type=${type}`
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${numericId}?type=${type}`
 		console.log(`🔗 Sending request to backend: ${backendUrl}`)
 
 		const response = await fetch(backendUrl, {
