@@ -80,36 +80,26 @@ export default function SheetMusicPage() {
 			try {
 				if (sheetMusic.length === 0) setLoading(true)
 				setError(null)
-
-				const response = await api.get('/sheet-music')
-
-				// Обработка данных - проверка как isFavorite, так и is_favorite из API
-				const processedData = response.data.map((item: any) => ({
+				const response = await api.get('/sheet-music', {
+					params: { limit, page },
+				})
+				const processedData = response.data.map((item: SheetMusicType) => ({
 					...item,
-					// Если уже загружены избранные, используем их, иначе данные из API
 					isFavorite: favoritesLoaded
 						? favoriteIds.includes(item.id)
 						: item.isFavorite || item.is_favorite || false,
 				}))
-
-				console.log('Список нот с проверкой избранного:', processedData)
 				setSheetMusic(processedData)
 				setFilteredSheetMusic(processedData)
 				setHasNextPage(processedData.length === limit)
 				setLoading(false)
-
-				// Если избранные уже загружены, обновляем статус
-				if (favoritesLoaded && favoriteIds.length > 0) {
-					updateFavoritesStatus(favoriteIds)
-				}
 			} catch (err) {
 				console.error('Ошибка при загрузке нот:', err)
 				setError('Не удалось загрузить ноты. Пожалуйста, попробуйте позже.')
 			}
 		}
-
 		fetchSheetMusic()
-	}, [favoritesLoaded, sheetMusic])
+	}, [favoritesLoaded, page])
 
 	// Фильтрация нот при изменении фильтров
 	useEffect(() => {
@@ -466,6 +456,10 @@ export default function SheetMusicPage() {
 		return difficultyLabels[difficultyKey] || difficultyKey
 	}
 
+	const [page, setPage] = useState(1)
+	const limit = 12
+	const [hasNextPage, setHasNextPage] = useState(false)
+
 	return (
 		<div className='bg-gray-50 min-h-screen'>
 			<div className='container mx-auto px-4 py-8'>
@@ -542,7 +536,7 @@ export default function SheetMusicPage() {
 					)}
 
 					{/* Индикатор загрузки */}
-					{loading && sheetMusic.length === 0 && (
+					{loading && (
 						<div className='flex justify-center py-12'>
 							<div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2A3F54]'></div>
 						</div>
@@ -619,6 +613,23 @@ export default function SheetMusicPage() {
 							))}
 						</div>
 					)}
+
+					<div className='flex justify-center mt-8 gap-4'>
+						<button
+							onClick={() => setPage(page - 1)}
+							disabled={page === 1}
+							className='px-6 py-2 rounded-[20px] bg-[#E4B87C] text-[#2A3F54] font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+						>
+							Артқа
+						</button>
+						<button
+							onClick={() => setPage(page + 1)}
+							disabled={!hasNextPage}
+							className='px-6 py-2 rounded-[20px] bg-[#E4B87C] text-[#2A3F54] font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+						>
+							Алға
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
