@@ -10,69 +10,12 @@ import { useEffect, useState } from 'react'
 export default function SheetMusicPage() {
 	const { user } = useAuthStore()
 	const [sheetMusic, setSheetMusic] = useState<SheetMusicType[]>([])
-	const [filteredSheetMusic, setFilteredSheetMusic] = useState<
-		SheetMusicType[]
-	>([])
 	const [loading, setLoading] = useState(true)
-	const [favoritesLoaded, setFavoritesLoaded] = useState(false)
-	const [favoriteIds, setFavoriteIds] = useState<number[]>([])
 	const [error, setError] = useState<string | null>(null)
-
-	// Фильтры
-	const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
+	const [selectedDifficulty] = useState<string>('all')
 	const [searchQuery, setSearchQuery] = useState<string>('')
-	const [showDifficultyDropdown, setShowDifficultyDropdown] = useState(false)
-
-	// Загрузка избранных элементов пользователя
-	useEffect(() => {
-		const fetchFavorites = async () => {
-			if (!user) {
-				setFavoritesLoaded(true)
-				return
-			}
-
-			try {
-				const favoritesResponse = await api.get('/favorites')
-
-				if (favoritesResponse.status === 200) {
-					// Извлекаем только идентификаторы из ответа API
-					const ids = favoritesResponse.data
-						.map((item: any) =>
-							typeof item.id === 'number'
-								? item.id
-								: item.sheet_music_id
-								? Number(item.sheet_music_id)
-								: Number(item.id)
-						)
-						.filter((id: any) => !isNaN(id))
-
-					console.log('Загружены ID избранных элементов:', ids)
-					setFavoriteIds(ids)
-
-					// Обновляем статус избранного в существующих нотах
-					if (sheetMusic.length > 0) {
-						updateFavoritesStatus(ids)
-					}
-				}
-			} catch (err) {
-				console.error('Ошибка при загрузке избранного:', err)
-			} finally {
-				setFavoritesLoaded(true)
-			}
-		}
-
-		fetchFavorites()
-	}, [user])
-
-	// Функция для обновления статуса избранного в карточках нот
-	const updateFavoritesStatus = (favoriteIds: number[]) => {
-		setSheetMusic(prevSheetMusic =>
-			prevSheetMusic.map(item => ({
-				...item,
-				isFavorite: favoriteIds.includes(item.id),
-			}))
-		)
-	}
+	const [page, setPage] = useState(1)
+	const [limit] = useState(12)
 
 	// Загрузка нотных материалов
 	useEffect(() => {
@@ -81,27 +24,27 @@ export default function SheetMusicPage() {
 				setLoading(true)
 				setError(null)
 
-				const response = await api.get('/sheet-music')
-
-				// Обработка данных - проверка как isFavorite, так и is_favorite из API
-				const processedData = response.data.map((item: any) => ({
-					...item,
-					// Если уже загружены избранные, используем их, иначе данные из API
-					isFavorite: favoritesLoaded
-						? favoriteIds.includes(item.id)
-						: item.isFavorite || item.is_favorite || false,
-				}))
-
-				console.log('Список нот с проверкой избранного:', processedData)
-				setSheetMusic(processedData)
-				setFilteredSheetMusic(processedData)
-
-				// Если избранные уже загружены, обновляем статус
-				if (favoritesLoaded && favoriteIds.length > 0) {
-					updateFavoritesStatus(favoriteIds)
+				const params: Record<string, string | number> = {
+					page,
+					limit,
 				}
-			} catch (err) {
-				console.error('Ошибка при загрузке нот:', err)
+				if (searchQuery) params.search = searchQuery
+				if (selectedDifficulty !== 'all') params.difficulty = selectedDifficulty
+
+				const response = await api.get('/sheet-music', { params })
+
+				if (Array.isArray(response.data)) {
+					setSheetMusic(response.data as SheetMusicType[])
+				} else if (response.data.items && Array.isArray(response.data.items)) {
+					setSheetMusic(response.data.items as SheetMusicType[])
+				} else {
+					setSheetMusic([])
+				}
+			} catch (err: unknown) {
+				console.error(
+					'Ошибка при загрузке нот:',
+					err instanceof Error ? err.message : err
+				)
 				setError('Не удалось загрузить ноты. Пожалуйста, попробуйте позже.')
 			} finally {
 				setLoading(false)
@@ -109,42 +52,7 @@ export default function SheetMusicPage() {
 		}
 
 		fetchSheetMusic()
-	}, [favoritesLoaded])
-
-	// Фильтрация нот при изменении фильтров
-	useEffect(() => {
-		let result = [...sheetMusic]
-
-		// Фильтрация по сложности
-		if (selectedDifficulty !== 'all') {
-			result = result.filter(item => item.difficulty === selectedDifficulty)
-		}
-
-		// Фильтрация по поисковому запросу
-		if (searchQuery) {
-			const query = searchQuery.toLowerCase()
-			result = result.filter(
-				item =>
-					(item.title && item.title.toLowerCase().includes(query)) ||
-					(item.description &&
-						item.description.toLowerCase().includes(query)) ||
-					(item.authorName && item.authorName.toLowerCase().includes(query)) ||
-					(item.composer && item.composer.toLowerCase().includes(query)) ||
-					(item.tags &&
-						Array.isArray(item.tags) &&
-						item.tags.some(tag => tag && tag.toLowerCase().includes(query)))
-			)
-		}
-
-		// Сортируем по новизне
-		result.sort(
-			(a, b) =>
-				new Date(b.createdAt || Date.now()).getTime() -
-				new Date(a.createdAt || Date.now()).getTime()
-		)
-
-		setFilteredSheetMusic(result)
-	}, [sheetMusic, selectedDifficulty, searchQuery])
+	}, [searchQuery, selectedDifficulty, page, limit])
 
 	// Обработчик добавления/удаления из избранного
 	const handleFavoriteToggle = async (id: number, isFavorite: boolean) => {
@@ -180,13 +88,6 @@ export default function SheetMusicPage() {
 					item.id === id ? { ...item, isFavorite: newIsFavorite } : item
 				)
 			)
-
-			// Обновляем список избранных ID
-			if (newIsFavorite) {
-				setFavoriteIds(prev => [...prev, id])
-			} else {
-				setFavoriteIds(prev => prev.filter(itemId => itemId !== id))
-			}
 
 			// Фиксирование ID для запроса - преобразуем в число
 			const sheetMusicId = Number(id)
@@ -230,10 +131,10 @@ export default function SheetMusicPage() {
 					} else {
 						throw new Error(`Ошибка HTTP: ${response.status}, ${responseText}`)
 					}
-				} catch (error: any) {
+				} catch (error: unknown) {
 					console.error(
 						'Ошибка при добавлении в избранное:',
-						error?.message || error
+						error instanceof Error ? error.message : error
 					)
 
 					// Отменяем оптимистичное обновление
@@ -242,13 +143,6 @@ export default function SheetMusicPage() {
 							item.id === id ? { ...item, isFavorite } : item
 						)
 					)
-
-					// Отменяем изменение в списке избранных ID
-					if (isFavorite) {
-						setFavoriteIds(prev => [...prev, id])
-					} else {
-						setFavoriteIds(prev => prev.filter(itemId => itemId !== id))
-					}
 
 					// Более дружелюбное сообщение об ошибке
 					alert(
@@ -279,10 +173,10 @@ export default function SheetMusicPage() {
 					} else {
 						throw new Error(`Ошибка HTTP: ${response.status}, ${responseText}`)
 					}
-				} catch (error: any) {
+				} catch (error: unknown) {
 					console.error(
 						'Ошибка при удалении из избранного:',
-						error?.message || error
+						error instanceof Error ? error.message : error
 					)
 					// Отменяем оптимистичное обновление
 					setSheetMusic(
@@ -291,23 +185,16 @@ export default function SheetMusicPage() {
 						)
 					)
 
-					// Отменяем изменение в списке избранных ID
-					if (isFavorite) {
-						setFavoriteIds(prev => [...prev, id])
-					} else {
-						setFavoriteIds(prev => prev.filter(itemId => itemId !== id))
-					}
-
 					// Более дружелюбное сообщение об ошибке
 					alert(
 						'Не удалось удалить из избранного. Пожалуйста, попробуйте позже.'
 					)
 				}
 			}
-		} catch (err: any) {
+		} catch (err: unknown) {
 			console.error(
 				'Общая ошибка при управлении избранным:',
-				err?.message || err
+				err instanceof Error ? err.message : err
 			)
 			// Отменяем оптимистичное обновление в случае ошибки
 			setSheetMusic(
@@ -319,183 +206,6 @@ export default function SheetMusicPage() {
 				'Произошла ошибка при изменении статуса избранного. Пожалуйста, попробуйте еще раз.'
 			)
 		}
-	}
-
-	// Функция для скачивания файла
-	const handleDownload = async (id: number, fileUrl: string, title: string) => {
-		if (!fileUrl) {
-			alert('Ошибка: URL файла не определен')
-			return
-		}
-
-		try {
-			// Если пользователь авторизован, отправляем запрос на увеличение счетчика скачиваний
-			if (user) {
-				try {
-					await api.post(`/sheet-music/${id}/download`)
-
-					// Обновляем локальный счетчик
-					setSheetMusic(
-						sheetMusic.map(item =>
-							item.id === id ? { ...item, downloads: item.downloads + 1 } : item
-						)
-					)
-				} catch (error) {
-					console.error('Ошибка при обновлении счетчика скачиваний:', error)
-				}
-			}
-
-			// Открываем файл для загрузки в новой вкладке
-			window.open(fileUrl, '_blank')
-		} catch (err) {
-			console.error('Ошибка при скачивании файла:', err)
-			alert('Ошибка при скачивании файла. Пожалуйста, попробуйте еще раз.')
-		}
-	}
-
-	// Заглушка для демонстрационных данных, если API недоступен
-	const loadDemoData = () => {
-		const demoSheetMusic: SheetMusicType[] = [
-			{
-				id: 1,
-				title: 'Адай',
-				description:
-					'Ноты для домбры легендарного кюя "Адай", одного из самых известных произведений.',
-				thumbnailUrl: '/images/demo/sheet1.jpg',
-				fileUrl: '/files/demo/adai-sheet.pdf',
-				instrument: 'dombyra',
-				difficulty: 'intermediate',
-				createdAt: '2023-11-10T12:45:00Z',
-				downloads: 842,
-				likes: 156,
-				pages: 3,
-				authorName: 'Құрманғазы',
-				authorId: 1,
-				tags: ['кюй', 'традиционная', 'классическая'],
-			},
-			{
-				id: 2,
-				title: 'Сарыарқа',
-				description:
-					'Кюй "Сарыарқа" для домбристов с подробными пояснениями и аппликатурой.',
-				thumbnailUrl: '/images/demo/sheet2.jpg',
-				fileUrl: '/files/demo/saryarka-beginner.pdf',
-				instrument: 'dombyra',
-				difficulty: 'advanced',
-				createdAt: '2023-09-05T08:30:00Z',
-				downloads: 1245,
-				likes: 98,
-				pages: 2,
-				authorName: 'Құрманғазы',
-				authorId: 3,
-				tags: ['кюй', 'сложная'],
-			},
-			{
-				id: 3,
-				title: 'Балбырауын',
-				description:
-					'Кюй "Балбырауын" с техническими элементами для опытных исполнителей.',
-				thumbnailUrl: '/images/demo/sheet3.jpg',
-				fileUrl: '/files/demo/balbyrauin-advanced.pdf',
-				instrument: 'dombyra',
-				difficulty: 'intermediate',
-				createdAt: '2023-10-22T16:15:00Z',
-				downloads: 567,
-				likes: 83,
-				pages: 5,
-				authorName: 'Құрманғазы',
-				authorId: 4,
-				tags: ['кюй', 'техничная'],
-			},
-			{
-				id: 4,
-				title: 'Көроғлы',
-				description: 'Кюй "Көроғлы" для домбры, одна из известных композиций.',
-				thumbnailUrl: '/images/demo/sheet1.jpg',
-				fileUrl: '/files/demo/korogluu.pdf',
-				instrument: 'dombyra',
-				difficulty: 'advanced',
-				createdAt: '2023-08-15T11:20:00Z',
-				downloads: 423,
-				likes: 65,
-				pages: 4,
-				authorName: 'Дәулеткерей',
-				authorId: 5,
-				tags: ['кюй', 'домбра'],
-			},
-			{
-				id: 5,
-				title: 'Ерке сылқым',
-				description:
-					'Кюй "Ерке сылқым" для домбры, начальный уровень сложности.',
-				thumbnailUrl: '/images/demo/sheet2.jpg',
-				fileUrl: '/files/demo/erke-sylkym.pdf',
-				instrument: 'dombyra',
-				difficulty: 'beginner',
-				createdAt: '2023-07-10T14:25:00Z',
-				downloads: 689,
-				likes: 112,
-				pages: 2,
-				authorName: 'Дәулеткерей',
-				authorId: 5,
-				tags: ['кюй', 'домбра', 'легкая'],
-			},
-			{
-				id: 6,
-				title: 'Қосалқа',
-				description: 'Кюй "Қосалқа" для домбры, средний уровень сложности.',
-				thumbnailUrl: '/images/demo/sheet3.jpg',
-				fileUrl: '/files/demo/kosalka.pdf',
-				instrument: 'dombyra',
-				difficulty: 'intermediate',
-				createdAt: '2023-06-05T09:30:00Z',
-				downloads: 542,
-				likes: 76,
-				pages: 3,
-				authorName: 'Дәулеткерей',
-				authorId: 5,
-				tags: ['кюй', 'домбра', 'средняя'],
-			},
-		]
-
-		// Убеждаемся, что все элементы имеют валидный fileUrl
-		const processedData = demoSheetMusic.map(item => ({
-			...item,
-			fileUrl: item.fileUrl || '/files/demo/default.pdf', // Запасной путь, если URL не указан
-		}))
-
-		setSheetMusic(processedData)
-		setFilteredSheetMusic(processedData)
-		setLoading(false)
-	}
-
-	// Если загрузка затягивается, загружаем демо-данные
-	useEffect(() => {
-		if (loading) {
-			const timer = setTimeout(() => {
-				if (loading && sheetMusic.length === 0) {
-					loadDemoData()
-				}
-			}, 3000) // Через 3 секунды загружаем демо-данные если API недоступен
-
-			return () => clearTimeout(timer)
-		}
-	}, [loading, sheetMusic])
-
-	// Получение уникальных значений для фильтров
-	const difficulties = ['all', 'beginner', 'intermediate', 'advanced']
-
-	// Словарь для перевода сложности
-	const difficultyLabels: Record<string, string> = {
-		beginner: 'Бастауыш',
-		intermediate: 'Орташа',
-		advanced: 'Күрделі',
-		all: 'Барлық деңгей',
-	}
-
-	// Функция для получения метки сложности
-	const getDifficultyLabel = (difficultyKey: string): string => {
-		return difficultyLabels[difficultyKey] || difficultyKey
 	}
 
 	return (
@@ -510,7 +220,10 @@ export default function SheetMusicPage() {
 								type='text'
 								placeholder='Күй немесе әннің атауын іздеу...'
 								value={searchQuery}
-								onChange={e => setSearchQuery(e.target.value)}
+								onChange={e => {
+									setSearchQuery(e.target.value)
+									setPage(1)
+								}}
 								className='w-full px-5 py-3 bg-transparent border border-[#2A3F54]/50 rounded-[50px] text-[#2A3F54]/50 text-[20px] focus:outline-none'
 							/>
 							<button className='absolute right-4 top-1/2 transform -translate-y-1/2'>
@@ -581,7 +294,7 @@ export default function SheetMusicPage() {
 					)}
 
 					{/* Карточки с нотами */}
-					{!loading && filteredSheetMusic.length === 0 ? (
+					{!loading && sheetMusic.length === 0 ? (
 						<div className='bg-white shadow-md rounded-lg p-8 text-center'>
 							<p className='text-lg text-gray-600'>
 								Нет доступных нот по заданным критериям.
@@ -589,7 +302,7 @@ export default function SheetMusicPage() {
 						</div>
 					) : (
 						<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-							{filteredSheetMusic.map(item => (
+							{sheetMusic.map(item => (
 								<div
 									key={item.id}
 									className='bg-white rounded-[20px] shadow-md overflow-hidden p-6 flex flex-col'
@@ -651,6 +364,25 @@ export default function SheetMusicPage() {
 							))}
 						</div>
 					)}
+
+					{/* Пагинация */}
+					<div className='flex justify-center mt-8 gap-4'>
+						<button
+							disabled={page === 1}
+							onClick={() => setPage(page - 1)}
+							className='px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50'
+						>
+							Назад
+						</button>
+						<span className='px-4 py-2'>{page}</span>
+						<button
+							disabled={sheetMusic.length < limit}
+							onClick={() => setPage(page + 1)}
+							className='px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50'
+						>
+							Вперёд
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
