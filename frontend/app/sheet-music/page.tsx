@@ -78,7 +78,7 @@ export default function SheetMusicPage() {
 	useEffect(() => {
 		const fetchSheetMusic = async () => {
 			try {
-				setLoading(true)
+				if (sheetMusic.length === 0) setLoading(true)
 				setError(null)
 
 				const response = await api.get('/sheet-music')
@@ -95,6 +95,8 @@ export default function SheetMusicPage() {
 				console.log('Список нот с проверкой избранного:', processedData)
 				setSheetMusic(processedData)
 				setFilteredSheetMusic(processedData)
+				setHasNextPage(processedData.length === limit)
+				setLoading(false)
 
 				// Если избранные уже загружены, обновляем статус
 				if (favoritesLoaded && favoriteIds.length > 0) {
@@ -103,8 +105,6 @@ export default function SheetMusicPage() {
 			} catch (err) {
 				console.error('Ошибка при загрузке нот:', err)
 				setError('Не удалось загрузить ноты. Пожалуйста, попробуйте позже.')
-			} finally {
-				setLoading(false)
 			}
 		}
 
@@ -542,7 +542,7 @@ export default function SheetMusicPage() {
 					)}
 
 					{/* Индикатор загрузки */}
-					{loading && (
+					{loading && sheetMusic.length === 0 && (
 						<div className='flex justify-center py-12'>
 							<div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2A3F54]'></div>
 						</div>
