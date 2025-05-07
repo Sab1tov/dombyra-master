@@ -221,13 +221,13 @@ router.put('/profile', authenticateToken, async (req, res) => {
 				const avatarUrl = `/uploads/avatars/${filename}`
 
 				// Добавляем аватар в запрос обновления
-				updateQuery += `, avatar = $${paramCount}`
+				updateQuery += `, avatar_url = $${paramCount}`
 				queryParams.push(avatarUrl)
 				paramCount++
 			} else if (avatar.startsWith('/uploads/avatars/')) {
 				// Если это путь к существующему аватару, оставляем его без изменений
 				console.log('Использование существующего аватара:', avatar)
-				updateQuery += `, avatar = $${paramCount}`
+				updateQuery += `, avatar_url = $${paramCount}`
 				queryParams.push(avatar)
 				paramCount++
 			} else {
@@ -257,7 +257,9 @@ router.put('/profile', authenticateToken, async (req, res) => {
 		}
 
 		updateQuery +=
-			' WHERE id = $' + paramCount + ' RETURNING id, username, email, avatar'
+			' WHERE id = $' +
+			paramCount +
+			' RETURNING id, username, email, avatar_url AS avatar'
 		queryParams.push(req.user.id)
 
 		const updatedUser = await pool.query(updateQuery, queryParams)
@@ -277,11 +279,12 @@ router.put('/profile', authenticateToken, async (req, res) => {
 router.delete('/profile/avatar', authenticateToken, async (req, res) => {
 	try {
 		// Получаем текущего пользователя
-		const user = await pool.query('SELECT avatar FROM users WHERE id = $1', [
-			req.user.id,
-		])
+		const user = await pool.query(
+			'SELECT avatar_url FROM users WHERE id = $1',
+			[req.user.id]
+		)
 
-		const avatarPath = user.rows[0]?.avatar
+		const avatarPath = user.rows[0]?.avatar_url
 
 		// Если аватар существует
 		if (avatarPath) {
@@ -300,7 +303,7 @@ router.delete('/profile/avatar', authenticateToken, async (req, res) => {
 			}
 
 			// Обновляем запись в базе данных
-			await pool.query('UPDATE users SET avatar = NULL WHERE id = $1', [
+			await pool.query('UPDATE users SET avatar_url = NULL WHERE id = $1', [
 				req.user.id,
 			])
 		}
