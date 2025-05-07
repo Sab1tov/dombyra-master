@@ -14,7 +14,7 @@ const router = express.Router()
 // ✅ Настраиваем `multer` для загрузки нот (ограничиваем размер до 10MB)
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		cb(null, 'uploads/sheet_music/')
+		cb(null, '/data/sheet_music/')
 	},
 	filename: (req, file, cb) => {
 		const ext = path.extname(file.originalname)

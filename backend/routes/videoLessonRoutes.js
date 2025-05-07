@@ -12,7 +12,7 @@ const router = express.Router()
 // ✅ Настройка multer для загрузки видеофайлов
 const videoStorage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		cb(null, 'uploads/videos/')
+		cb(null, '/data/videos/')
 	},
 	filename: (req, file, cb) => {
 		const ext = path.extname(file.originalname)
