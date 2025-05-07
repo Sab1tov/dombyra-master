@@ -18,9 +18,7 @@ export default function SheetMusicPage() {
 	const limit = 12
 
 	// Фильтры
-	const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
 	const [searchQuery, setSearchQuery] = useState<string>('')
-	const [showDifficultyDropdown, setShowDifficultyDropdown] = useState(false)
 
 	// Загрузка избранных элементов пользователя
 	useEffect(() => {
@@ -85,6 +83,8 @@ export default function SheetMusicPage() {
 					limit,
 				}
 
+				if (searchQuery) params.search = searchQuery
+
 				const response = await api.get('/sheet-music', { params })
 
 				// Обработка данных - проверка как isFavorite, так и is_favorite из API
@@ -112,7 +112,7 @@ export default function SheetMusicPage() {
 		}
 
 		fetchSheetMusic()
-	}, [favoritesLoaded, page, limit])
+	}, [favoritesLoaded, page, limit, searchQuery])
 
 	// Обработчик добавления/удаления из избранного
 	const handleFavoriteToggle = async (id: number, isFavorite: boolean) => {
@@ -289,38 +289,6 @@ export default function SheetMusicPage() {
 		}
 	}
 
-	// Функция для скачивания файла
-	const handleDownload = async (id: number, fileUrl: string, title: string) => {
-		if (!fileUrl) {
-			alert('Ошибка: URL файла не определен')
-			return
-		}
-
-		try {
-			// Если пользователь авторизован, отправляем запрос на увеличение счетчика скачиваний
-			if (user) {
-				try {
-					await api.post(`/sheet-music/${id}/download`)
-
-					// Обновляем локальный счетчик
-					setSheetMusic(
-						sheetMusic.map(item =>
-							item.id === id ? { ...item, downloads: item.downloads + 1 } : item
-						)
-					)
-				} catch (error) {
-					console.error('Ошибка при обновлении счетчика скачиваний:', error)
-				}
-			}
-
-			// Открываем файл для загрузки в новой вкладке
-			window.open(fileUrl, '_blank')
-		} catch (err) {
-			console.error('Ошибка при скачивании файла:', err)
-			alert('Ошибка при скачивании файла. Пожалуйста, попробуйте еще раз.')
-		}
-	}
-
 	// Заглушка для демонстрационных данных, если API недоступен
 	const loadDemoData = () => {
 		const demoSheetMusic: SheetMusicType[] = [
@@ -448,22 +416,6 @@ export default function SheetMusicPage() {
 			return () => clearTimeout(timer)
 		}
 	}, [loading, sheetMusic])
-
-	// Получение уникальных значений для фильтров
-	const difficulties = ['all', 'beginner', 'intermediate', 'advanced']
-
-	// Словарь для перевода сложности
-	const difficultyLabels: Record<string, string> = {
-		beginner: 'Бастауыш',
-		intermediate: 'Орташа',
-		advanced: 'Күрделі',
-		all: 'Барлық деңгей',
-	}
-
-	// Функция для получения метки сложности
-	const getDifficultyLabel = (difficultyKey: string): string => {
-		return difficultyLabels[difficultyKey] || difficultyKey
-	}
 
 	return (
 		<div className='bg-gray-50 min-h-screen'>
