@@ -10,15 +10,18 @@ import { useEffect, useState } from 'react'
 export default function SheetMusicPage() {
 	const { user } = useAuthStore()
 	const [sheetMusic, setSheetMusic] = useState<SheetMusicType[]>([])
+	const [filteredSheetMusic, setFilteredSheetMusic] = useState<
+		SheetMusicType[]
+	>([])
 	const [loading, setLoading] = useState(true)
 	const [favoritesLoaded, setFavoritesLoaded] = useState(false)
 	const [favoriteIds, setFavoriteIds] = useState<number[]>([])
 	const [error, setError] = useState<string | null>(null)
-	const [page, setPage] = useState(1)
-	const limit = 12
 
 	// Фильтры
+	const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
 	const [searchQuery, setSearchQuery] = useState<string>('')
+	const [showDifficultyDropdown, setShowDifficultyDropdown] = useState(false)
 
 	// Загрузка избранных элементов пользователя
 	useEffect(() => {
@@ -78,14 +81,7 @@ export default function SheetMusicPage() {
 				setLoading(true)
 				setError(null)
 
-				const params: Record<string, string | number> = {
-					page,
-					limit,
-				}
-
-				if (searchQuery) params.search = searchQuery
-
-				const response = await api.get('/sheet-music', { params })
+				const response = await api.get('/sheet-music')
 
 				// Обработка данных - проверка как isFavorite, так и is_favorite из API
 				const processedData = response.data.map((item: any) => ({
@@ -98,6 +94,7 @@ export default function SheetMusicPage() {
 
 				console.log('Список нот с проверкой избранного:', processedData)
 				setSheetMusic(processedData)
+				setFilteredSheetMusic(processedData)
 
 				// Если избранные уже загружены, обновляем статус
 				if (favoritesLoaded && favoriteIds.length > 0) {
@@ -112,7 +109,42 @@ export default function SheetMusicPage() {
 		}
 
 		fetchSheetMusic()
-	}, [favoritesLoaded, page, limit, searchQuery])
+	}, [favoritesLoaded])
+
+	// Фильтрация нот при изменении фильтров
+	useEffect(() => {
+		let result = [...sheetMusic]
+
+		// Фильтрация по сложности
+		if (selectedDifficulty !== 'all') {
+			result = result.filter(item => item.difficulty === selectedDifficulty)
+		}
+
+		// Фильтрация по поисковому запросу
+		if (searchQuery) {
+			const query = searchQuery.toLowerCase()
+			result = result.filter(
+				item =>
+					(item.title && item.title.toLowerCase().includes(query)) ||
+					(item.description &&
+						item.description.toLowerCase().includes(query)) ||
+					(item.authorName && item.authorName.toLowerCase().includes(query)) ||
+					(item.composer && item.composer.toLowerCase().includes(query)) ||
+					(item.tags &&
+						Array.isArray(item.tags) &&
+						item.tags.some(tag => tag && tag.toLowerCase().includes(query)))
+			)
+		}
+
+		// Сортируем по новизне
+		result.sort(
+			(a, b) =>
+				new Date(b.createdAt || Date.now()).getTime() -
+				new Date(a.createdAt || Date.now()).getTime()
+		)
+
+		setFilteredSheetMusic(result)
+	}, [sheetMusic, selectedDifficulty, searchQuery])
 
 	// Обработчик добавления/удаления из избранного
 	const handleFavoriteToggle = async (id: number, isFavorite: boolean) => {
@@ -401,6 +433,7 @@ export default function SheetMusicPage() {
 		}))
 
 		setSheetMusic(processedData)
+		setFilteredSheetMusic(processedData)
 		setLoading(false)
 	}
 
@@ -500,7 +533,7 @@ export default function SheetMusicPage() {
 					)}
 
 					{/* Карточки с нотами */}
-					{!loading && sheetMusic.length === 0 ? (
+					{!loading && filteredSheetMusic.length === 0 ? (
 						<div className='bg-white shadow-md rounded-lg p-8 text-center'>
 							<p className='text-lg text-gray-600'>
 								Нет доступных нот по заданным критериям.
@@ -508,7 +541,7 @@ export default function SheetMusicPage() {
 						</div>
 					) : (
 						<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-							{sheetMusic.map(item => (
+							{filteredSheetMusic.map(item => (
 								<div
 									key={item.id}
 									className='bg-white rounded-[20px] shadow-md overflow-hidden p-6 flex flex-col'
@@ -519,7 +552,6 @@ export default function SheetMusicPage() {
 									<p className='text-[17px] text-[#2A3F54] mb-4'>
 										{item.composer || item.authorName}
 									</p>
-
 									{/* Действия */}
 									<div className='mt-auto flex justify-between items-center'>
 										<div className='flex gap-2'>
@@ -529,8 +561,18 @@ export default function SheetMusicPage() {
 											>
 												Қарау
 											</Link>
+											{item.fileUrl && (
+												<a
+													href={item.fileUrl}
+													download
+													target='_blank'
+													rel='noopener noreferrer'
+													className='px-4 py-2 bg-[#E4B87C] text-[#2A3F54] text-[15px] font-medium rounded-[20px] flex items-center justify-center ml-2'
+												>
+													Жүктеу
+												</a>
+											)}
 										</div>
-
 										<button
 											onClick={() =>
 												handleFavoriteToggle(item.id, Boolean(item.isFavorite))
@@ -570,25 +612,6 @@ export default function SheetMusicPage() {
 							))}
 						</div>
 					)}
-
-					{/* Кнопки пагинации */}
-					<div className='flex justify-center mt-8 gap-4'>
-						<button
-							disabled={page === 1}
-							onClick={() => setPage(page - 1)}
-							className='px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50'
-						>
-							Артқа
-						</button>
-						<span className='px-4 py-2'>{page}</span>
-						<button
-							disabled={sheetMusic.length < limit}
-							onClick={() => setPage(page + 1)}
-							className='px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50'
-						>
-							Алға
-						</button>
-					</div>
 				</div>
 			</div>
 		</div>
