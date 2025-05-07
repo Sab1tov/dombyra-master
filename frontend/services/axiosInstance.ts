@@ -22,7 +22,7 @@ const checkNetworkStatus = () => {
 }
 
 const api = axios.create({
-	baseURL: process.env.NEXT_PUBLIC_API_URL, // Используем абсолютный путь к backend
+	baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api`, // Теперь все запросы идут на backend API
 	headers: {
 		'Content-Type': 'application/json',
 	},
