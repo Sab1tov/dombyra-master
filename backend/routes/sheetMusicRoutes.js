@@ -99,7 +99,7 @@ router.get('/', async (req, res) => {
 		const updatedNotes = notes.rows.map(note => ({
 			...note,
 			file_path: note.file_path
-				? `http://localhost:5000/${note.file_path}`
+				? `${process.env.BASE_URL || 'http://localhost:5000'}/${note.file_path}`
 				: null,
 		}))
 
@@ -164,7 +164,9 @@ router.get('/:id', async (req, res) => {
 		// Преобразуем пути к файлам в полные URL
 		let fileUrl = ''
 		if (sheetMusic.file_path) {
-			fileUrl = `http://localhost:5000/${sheetMusic.file_path}`
+			fileUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/${
+				sheetMusic.file_path
+			}`
 		}
 
 		// Получаем информацию о тегах (если они есть в отдельной таблице)
@@ -316,7 +318,9 @@ router.post(
 				res.status(201).json({
 					message: 'Ноты успешно добавлены!',
 					sheet: newSheet.rows[0],
-					file_url: `http://localhost:5000/${file_path}`,
+					file_url: `${
+						process.env.BASE_URL || 'http://localhost:5000'
+					}/${file_path}`,
 				})
 			} catch (error) {
 				await client.query('ROLLBACK')
@@ -477,7 +481,9 @@ router.put(
 			res.json({
 				message: 'Файл нот успешно обновлен',
 				sheet: updatedSheet.rows[0],
-				file_url: `http://localhost:5000/${newFilePath}`,
+				file_url: `${
+					process.env.BASE_URL || 'http://localhost:5000'
+				}/${newFilePath}`,
 			})
 		} catch (error) {
 			console.error('Ошибка при обновлении файла нот:', error)

@@ -212,7 +212,9 @@ router.post(
 			}
 
 			const videoPath = `uploads/videos/${req.file.filename}`
-			const videoUrl = `http://localhost:5000/${videoPath}`
+			const videoUrl = `${
+				process.env.BASE_URL || 'http://localhost:5000'
+			}/${videoPath}`
 
 			// Получаем данные из формы
 			const { title, description, thumbnail_url, duration } = req.body

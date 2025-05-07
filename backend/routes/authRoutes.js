@@ -25,49 +25,35 @@ if (!fs.existsSync(avatarsDir)) {
 }
 
 router.post('/register', registerValidation, async (req, res) => {
-	console.log('📝 Получен запрос на регистрацию:', {
-		body: req.body,
-		headers: {
-			'content-type': req.headers['content-type'],
-			origin: req.headers['origin'],
-		},
-	})
-
 	const errors = validationResult(req)
 	if (!errors.isEmpty()) {
-		console.log('❌ Ошибки валидации при регистрации:', errors.array())
 		return res.status(400).json({ errors: errors.array() })
 	}
 
 	try {
 		const { username, email, password } = req.body
-		console.log(`🔍 Проверка существования пользователя: ${email}, ${username}`)
 
 		const userExists = await pool.query(
 			'SELECT * FROM users WHERE email = $1 OR username = $2',
 			[email, username]
 		)
 		if (userExists.rows.length > 0) {
-			console.log('❌ Email или Username уже используются:', userExists.rows)
 			return res
 				.status(400)
 				.json({ error: 'Email или Username уже используются' })
 		}
 
-		console.log('🔒 Хэширование пароля')
 		const hashedPassword = await bcrypt.hash(password, 10)
 
-		console.log('📥 Вставка нового пользователя в БД')
 		const newUser = await pool.query(
 			'INSERT INTO users (username, email, password, created_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING id, username, email',
 			[username, email, hashedPassword]
 		)
 
-		console.log('✅ Пользователь успешно создан:', newUser.rows[0])
 		res.json({ message: 'Регистрация успешна!', user: newUser.rows[0] })
 	} catch (error) {
-		console.error('❌ Ошибка при регистрации:', error)
-		res.status(500).json({ error: 'Ошибка сервера', details: error.message })
+		console.error(error)
+		res.status(500).json({ error: 'Ошибка сервера' })
 	}
 })
 
@@ -152,7 +138,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
 
 		// Запрашиваем данные пользователя
 		const user = await pool.query(
-			'SELECT id, username, email, avatar_url as avatar, created_at FROM users WHERE id = $1',
+			'SELECT id, username, email, avatar, created_at FROM users WHERE id = $1',
 			[req.user.id]
 		)
 
@@ -231,13 +217,13 @@ router.put('/profile', authenticateToken, async (req, res) => {
 				const avatarUrl = `/uploads/avatars/${filename}`
 
 				// Добавляем аватар в запрос обновления
-				updateQuery += `, avatar_url = $${paramCount}`
+				updateQuery += `, avatar = $${paramCount}`
 				queryParams.push(avatarUrl)
 				paramCount++
 			} else if (avatar.startsWith('/uploads/avatars/')) {
 				// Если это путь к существующему аватару, оставляем его без изменений
 				console.log('Использование существующего аватара:', avatar)
-				updateQuery += `, avatar_url = $${paramCount}`
+				updateQuery += `, avatar = $${paramCount}`
 				queryParams.push(avatar)
 				paramCount++
 			} else {
@@ -267,9 +253,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
 		}
 
 		updateQuery +=
-			' WHERE id = $' +
-			paramCount +
-			' RETURNING id, username, email, avatar_url as avatar'
+			' WHERE id = $' + paramCount + ' RETURNING id, username, email, avatar'
 		queryParams.push(req.user.id)
 
 		const updatedUser = await pool.query(updateQuery, queryParams)
@@ -289,10 +273,9 @@ router.put('/profile', authenticateToken, async (req, res) => {
 router.delete('/profile/avatar', authenticateToken, async (req, res) => {
 	try {
 		// Получаем текущего пользователя
-		const user = await pool.query(
-			'SELECT avatar_url as avatar FROM users WHERE id = $1',
-			[req.user.id]
-		)
+		const user = await pool.query('SELECT avatar FROM users WHERE id = $1', [
+			req.user.id,
+		])
 
 		const avatarPath = user.rows[0]?.avatar
 
@@ -313,7 +296,7 @@ router.delete('/profile/avatar', authenticateToken, async (req, res) => {
 			}
 
 			// Обновляем запись в базе данных
-			await pool.query('UPDATE users SET avatar_url = NULL WHERE id = $1', [
+			await pool.query('UPDATE users SET avatar = NULL WHERE id = $1', [
 				req.user.id,
 			])
 		}
@@ -367,7 +350,9 @@ router.post('/reset-password', async (req, res) => {
 		})
 
 		// Send reset email
-		const resetUrl = `http://localhost:3000/auth/new-password?token=${resetToken}`
+		const resetUrl = `${
+			process.env.FRONTEND_URL || 'http://localhost:3000'
+		}/auth/new-password?token=${resetToken}`
 		const mailOptions = {
 			from: process.env.EMAIL_USER,
 			to: email,
