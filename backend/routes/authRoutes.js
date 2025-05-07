@@ -138,7 +138,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
 
 		// Запрашиваем данные пользователя
 		const user = await pool.query(
-			'SELECT id, username, email, avatar, created_at FROM users WHERE id = $1',
+			'SELECT id, username, email, avatar_url AS avatar, created_at FROM users WHERE id = $1',
 			[req.user.id]
 		)
 
