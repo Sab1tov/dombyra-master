@@ -250,7 +250,7 @@ router.get('/sheet_music/:id', async (req, res) => {
 		try {
 			// Теперь можем использовать avatar, так как поле добавлено в таблицу
 			const comments = await pool.query(
-				`SELECT c.*, u.username, u.avatar
+				`SELECT c.*, u.username, u.avatar_url AS avatar
 				FROM comments c
 				JOIN users u ON c.user_id = u.id
 				WHERE c.sheet_music_id = $1 AND c.parent_id IS NULL
@@ -277,7 +277,7 @@ router.get('/sheet_music/:id', async (req, res) => {
 
 				try {
 					const replies = await pool.query(
-						`SELECT r.*, u.username, u.avatar
+						`SELECT r.*, u.username, u.avatar_url AS avatar
 						FROM comments r
 						JOIN users u ON r.user_id = u.id
 						WHERE r.parent_id = $1
@@ -358,7 +358,7 @@ router.get('/video/:id', async (req, res) => {
 		try {
 			// Теперь можем использовать avatar, так как поле добавлено в таблицу
 			const comments = await pool.query(
-				`SELECT c.*, u.username, u.avatar
+				`SELECT c.*, u.username, u.avatar_url AS avatar
 				FROM comments c
 				JOIN users u ON c.user_id = u.id
 				WHERE c.video_id = $1 AND c.parent_id IS NULL
@@ -385,7 +385,7 @@ router.get('/video/:id', async (req, res) => {
 
 				try {
 					const replies = await pool.query(
-						`SELECT r.*, u.username, u.avatar
+						`SELECT r.*, u.username, u.avatar_url AS avatar
 						FROM comments r
 						JOIN users u ON r.user_id = u.id
 						WHERE r.parent_id = $1
@@ -593,7 +593,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
 		// Получаем информацию о пользователе для возврата вместе с комментарием
 		const userInfo = await pool.query(
-			'SELECT username, avatar FROM users WHERE id = $1',
+			'SELECT username, avatar_url AS avatar FROM users WHERE id = $1',
 			[userId]
 		)
 
