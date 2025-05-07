@@ -78,15 +78,6 @@ const SheetMusicCard = ({
 		}
 	}
 
-	// Функция загрузки файла
-	const handleDownload = async () => {
-		// В реальном приложении здесь будет логика для отслеживания загрузок
-		// и возможно проверка доступа пользователя к контенту
-
-		// Прямая загрузка файла
-		window.open(sheetMusic.fileUrl, '_blank')
-	}
-
 	// Компактная версия карточки
 	if (compact) {
 		return (
@@ -254,8 +245,8 @@ const SheetMusicCard = ({
 						</div>
 					</div>
 
-					<button
-						onClick={handleDownload}
+					<Link
+						href={`/api/sheet-music/${sheetMusic.id}/download`}
 						className='text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center'
 					>
 						<svg
@@ -273,7 +264,7 @@ const SheetMusicCard = ({
 							/>
 						</svg>
 						Скачать
-					</button>
+					</Link>
 				</div>
 			</div>
 		</div>
