@@ -286,14 +286,8 @@ const SheetMusicPage = () => {
 	const handleDownload = async () => {
 		if (!sheetMusic?.fileUrl) return
 
-		try {
-			// Регистрируем загрузку
-			await api.post(`/sheet-music/${id}/download`)
-			// Открываем файл для загрузки
-			window.open(sheetMusic.fileUrl, '_blank')
-		} catch (error) {
-			console.error('Ошибка при загрузке файла:', error)
-		}
+		// Открываем файл для загрузки
+		window.open(sheetMusic.fileUrl, '_blank')
 	}
 
 	// Функция для форматирования сложности
