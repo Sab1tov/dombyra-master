@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 		}
 
 		// Формируем URL к бэкенду
-		const backendUrl = 'http://localhost:5000/api/auth/refresh-token'
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh-token`
 
 		// Выполняем запрос к бэкенду
 		const response = await fetch(backendUrl, {

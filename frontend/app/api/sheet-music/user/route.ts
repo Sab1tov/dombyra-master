@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
 		// Попытка получения данных от бэкенда
 		try {
-			const backendUrl = 'http://localhost:5000/api/sheet-music'
+			const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/sheet-music`
 
 			console.log(`[User Sheet Music API] Fetching from: ${backendUrl}`)
 

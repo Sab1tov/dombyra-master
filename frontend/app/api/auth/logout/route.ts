@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 			: null
 
 		// Формируем URL к бэкенду
-		const backendUrl = 'http://localhost:5000/api/auth/logout'
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`
 
 		// Выполняем запрос к бэкенду, передавая токены
 		await fetch(backendUrl, {

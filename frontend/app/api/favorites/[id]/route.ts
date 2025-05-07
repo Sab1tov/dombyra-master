@@ -19,7 +19,7 @@ export async function DELETE(
 		}
 
 		// Формируем URL к бэкенду
-		const backendUrl = `http://localhost:5000/api/favorites/${id}`
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${id}`
 
 		// Выполняем запрос к бэкенду с передачей токена авторизации
 		const response = await fetch(backendUrl, {

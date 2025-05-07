@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 		}
 
 		// Формируем URL к бэкенду
-		const backendUrl = 'http://localhost:5000/api/auth/profile'
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`
 
 		console.log('🔄 Отправка запроса к бэкенду:', backendUrl)
 		console.log(
@@ -125,7 +125,7 @@ export async function PUT(req: NextRequest) {
 		}
 
 		// Формируем URL к бэкенду
-		const backendUrl = 'http://localhost:5000/api/auth/profile'
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`
 
 		console.log('🔄 Отправка запроса на обновление профиля')
 

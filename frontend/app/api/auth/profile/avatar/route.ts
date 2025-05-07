@@ -19,7 +19,7 @@ export async function DELETE(req: NextRequest) {
 		)
 
 		// Формируем URL к бэкенду - исправляем на правильный путь
-		const backendUrl = 'http://localhost:5000/api/auth/profile/avatar'
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile/avatar`
 		console.log('🔗 Forwarding avatar delete request to backend:', backendUrl)
 
 		// Выполняем запрос к бэкенду с передачей токена авторизации
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 		const formData = await req.formData()
 
 		// Формируем URL к бэкенду
-		const backendUrl = 'http://localhost:5000/api/auth/avatar'
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/avatar`
 
 		// Выполняем запрос к бэкенду
 		const response = await fetch(backendUrl, {

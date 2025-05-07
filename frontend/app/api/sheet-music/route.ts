@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
 		backendFormData.append('tags[]', 'домбра')
 
 		// Формируем URL к бэкенду
-		const backendUrl = 'http://localhost:5000/api/sheet-music'
+		const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/sheet-music`
 
 		console.log(`[Sheet Music API] Uploading sheet music to: ${backendUrl}`)
 
