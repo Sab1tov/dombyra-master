@@ -45,7 +45,6 @@ router.get('/', async (req, res) => {
 		const offset = (parseInt(page) - 1) * parseInt(limit)
 		const searchTerm = search ? `%${search.toLowerCase()}%` : null
 
-		// Проверяем наличие пользователя в запросе
 		const userId = req.user ? req.user.id : null
 
 		let query, params
@@ -82,9 +81,8 @@ router.get('/', async (req, res) => {
 				params.push(parseInt(limit), offset)
 			}
 		} else {
-			// Для неавторизованных пользователей не показываем избранное
 			query = `
-				SELECT sm.*, u.username AS owner_username, 
+				SELECT sm.*, u.username AS owner_username,
 					false AS is_favorite
 				FROM sheet_music sm
 				JOIN users u ON sm.user_id = u.id
@@ -108,23 +106,30 @@ router.get('/', async (req, res) => {
 		const notes = await pool.query(query, params)
 
 		// Фильтруем записи: если file_path есть, но файла нет на сервере — не включаем в выдачу
-		const updatedNotes = notes.rows
-			.filter(note => {
-				if (!note.file_path) return true
-				const fullPath = require('path').join(__dirname, '..', note.file_path)
-				return fs
-					.access(fullPath)
-					.then(() => true)
-					.catch(() => false)
+		const updatedNotes = await Promise.all(
+			notes.rows.map(async note => {
+				if (!note.file_path) return note
+				const fullPath = require('path').join(
+					'/data/sheet_music/',
+					note.file_path.split('/').pop()
+				)
+				try {
+					await fs.access(fullPath)
+					return note
+				} catch {
+					return null
+				}
 			})
-			.map(note => ({
+		)
+
+		res.json(
+			updatedNotes.filter(Boolean).map(note => ({
 				...note,
 				file_path: note.file_path
 					? `${process.env.BASE_URL}/${note.file_path}`
 					: null,
 			}))
-
-		res.json(updatedNotes)
+		)
 	} catch (error) {
 		console.error('Ошибка при получении нот с пагинацией:', error, error.stack)
 		res.status(500).json({ error: 'Ошибка сервера' })
@@ -295,6 +300,21 @@ router.post(
 
 			if (!file_path) {
 				return res.status(400).json({ error: 'Файл с нотами обязателен' })
+			}
+
+			// Проверяем, что файл действительно существует
+			if (file_path) {
+				const fullPath = require('path').join(
+					'/data/sheet_music/',
+					req.file.filename
+				)
+				try {
+					await fs.access(fullPath)
+				} catch {
+					return res
+						.status(500)
+						.json({ error: 'Файл не был сохранён на сервере' })
+				}
 			}
 
 			// Начинаем транзакцию
