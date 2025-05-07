@@ -41,6 +41,6 @@ export const config = {
 		 * 3. /fonts, /icons (static files)
 		 * 4. /favicon.ico, /sitemap.xml (static files)
 		 */
-		'/((?!api|_next|fonts|icons|favicon.ico|sitemap.xml).*)',
+		'/((?!api|_next|fonts|icons|favicon.svg|sitemap.xml).*)',
 	],
 }
