@@ -136,6 +136,21 @@ router.get('/', async (req, res) => {
 	}
 })
 
+// Получить все ноты, загруженные текущим пользователем
+router.get('/user', authenticateToken, async (req, res) => {
+	try {
+		const userId = req.user.id
+		const notes = await pool.query(
+			'SELECT * FROM sheet_music WHERE user_id = $1 ORDER BY created_at DESC',
+			[userId]
+		)
+		res.json(notes.rows)
+	} catch (error) {
+		console.error('Ошибка при получении нот пользователя:', error)
+		res.status(500).json({ error: 'Ошибка сервера' })
+	}
+})
+
 // ✅ Получить отдельный нотный материал по ID (доступно всем)
 router.get('/:id', async (req, res) => {
 	try {
@@ -605,21 +620,6 @@ router.get('/:id/download', async (req, res) => {
 	} catch (error) {
 		console.error('Ошибка при скачивании нот:', error)
 		res.status(500).json({ error: 'Ошибка сервера при скачивании нот' })
-	}
-})
-
-// Получить все ноты, загруженные текущим пользователем
-router.get('/user', authenticateToken, async (req, res) => {
-	try {
-		const userId = req.user.id
-		const notes = await pool.query(
-			'SELECT * FROM sheet_music WHERE user_id = $1 ORDER BY created_at DESC',
-			[userId]
-		)
-		res.json(notes.rows)
-	} catch (error) {
-		console.error('Ошибка при получении нот пользователя:', error)
-		res.status(500).json({ error: 'Ошибка сервера' })
 	}
 })
 
