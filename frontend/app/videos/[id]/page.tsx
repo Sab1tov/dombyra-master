@@ -1025,10 +1025,10 @@ export default function VideoDetailPage() {
 				<div className='flex flex-col justify-center items-center min-h-[50vh]'>
 					<div className='w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4'></div>
 					<div className='text-lg font-medium text-gray-700'>
-						Загрузка видеоурока...
+						Бейнесабақты жүктеп отырмыз...
 					</div>
 					<p className='text-gray-500 mt-2 text-center'>
-						Пожалуйста, подождите. Мы готовим ваш урок.
+						Сабыр танытыңыз. Бейнесабағыңызды жүктеп отырмыз...
 					</p>
 				</div>
 			</div>
@@ -1045,7 +1045,7 @@ export default function VideoDetailPage() {
 						onClick={() => router.push('/videos')}
 						className='mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg'
 					>
-						Вернуться к списку уроков
+						Бейнесабақтар тізіміне қайту
 					</button>
 				</div>
 			</div>
@@ -1055,7 +1055,7 @@ export default function VideoDetailPage() {
 	if (!video) {
 		return (
 			<div className='container mx-auto px-4 py-8 text-center'>
-				<p>Видеоурок не найден</p>
+				<p>Бейнесабақ табылмады</p>
 				<button
 					onClick={() => router.back()}
 					className='mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700'
@@ -1071,19 +1071,17 @@ export default function VideoDetailPage() {
 			<div className='container mx-auto px-4 py-8'>
 				<div className='bg-orange-100 p-6 rounded-lg text-center'>
 					<h2 className='text-orange-800 font-bold text-xl mb-3'>
-						Требуется авторизация
+						Тіркелу қажет
 					</h2>
-					<p className='mb-4'>
-						Для просмотра видеоуроков необходимо войти в систему.
-					</p>
+					<p className='mb-4'>Бейнесабақтарды қарау үшін тіркелу қажет.</p>
 					<p className='mb-6 text-gray-600'>
-						Вы будете перенаправлены на страницу входа через несколько секунд...
+						Бірнеше секундтан кейін кіру парақшасына ауысасыз...
 					</p>
 					<button
 						onClick={() => router.push('/auth/login')}
 						className='bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors'
 					>
-						Войти сейчас
+						Қазір кіру
 					</button>
 				</div>
 			</div>
@@ -1121,7 +1119,7 @@ export default function VideoDetailPage() {
 				<div className='bg-black rounded-lg overflow-hidden mb-8 relative'>
 					{video.isCompleted && (
 						<div className='absolute top-4 left-4 z-10 bg-green-500 text-white px-3 py-1 rounded-full text-sm'>
-							Просмотрено
+							Қаралды
 						</div>
 					)}
 
@@ -1140,10 +1138,10 @@ export default function VideoDetailPage() {
 							<div className='absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 p-4 text-white'>
 								<div className='flex justify-between items-center'>
 									<div>
-										<p className='text-lg font-medium mb-1'>Следующий урок:</p>
+										<p className='text-lg font-medium mb-1'>Келесі сабақ:</p>
 										<p>{nextVideo.title}</p>
 										<p className='text-sm text-gray-300'>
-											Автоматический переход через {countdown} сек.
+											Автоматтық ауысуға {countdown} секунд қалды.
 										</p>
 									</div>
 									<div className='flex space-x-2'>
@@ -1151,13 +1149,13 @@ export default function VideoDetailPage() {
 											onClick={cancelAutoplay}
 											className='px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded'
 										>
-											Отмена
+											Бас тарту
 										</button>
 										<button
 											onClick={goToNextVideo}
 											className='px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded'
 										>
-											Перейти сейчас
+											Қазір ауысу
 										</button>
 									</div>
 								</div>
