@@ -18,7 +18,7 @@ require('dotenv').config()
 const router = express.Router()
 
 // Создаем директорию для аватаров, если она не существует
-const avatarsDir = path.join(__dirname, '../uploads/avatars')
+const avatarsDir = '/data/avatars'
 if (!fs.existsSync(avatarsDir)) {
 	fs.mkdirSync(avatarsDir, { recursive: true })
 	console.log('Создана директория для аватаров:', avatarsDir)
