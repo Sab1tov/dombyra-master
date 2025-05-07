@@ -288,10 +288,10 @@ router.delete('/profile/avatar', authenticateToken, async (req, res) => {
 
 		// Если аватар существует
 		if (avatarPath) {
-			// Если аватар это файл на сервере (начинается с /uploads/)
+			// Если аватар это файл на сервере (начинается с /uploads/avatars/)
 			if (avatarPath.startsWith('/uploads/avatars/')) {
-				// Получаем полный путь к файлу
-				const fullPath = path.join(__dirname, '..', avatarPath)
+				// Новый способ: ищем файл только в /data/avatars
+				const fullPath = path.join('/data/avatars', path.basename(avatarPath))
 
 				// Проверяем существование файла и удаляем его
 				if (fs.existsSync(fullPath)) {
