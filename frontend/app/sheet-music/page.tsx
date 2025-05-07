@@ -321,6 +321,38 @@ export default function SheetMusicPage() {
 		}
 	}
 
+	// Функция для скачивания файла
+	const handleDownload = async (id: number, fileUrl: string, title: string) => {
+		if (!fileUrl) {
+			alert('Ошибка: URL файла не определен')
+			return
+		}
+
+		try {
+			// Если пользователь авторизован, отправляем запрос на увеличение счетчика скачиваний
+			if (user) {
+				try {
+					await api.post(`/sheet-music/${id}/download`)
+
+					// Обновляем локальный счетчик
+					setSheetMusic(
+						sheetMusic.map(item =>
+							item.id === id ? { ...item, downloads: item.downloads + 1 } : item
+						)
+					)
+				} catch (error) {
+					console.error('Ошибка при обновлении счетчика скачиваний:', error)
+				}
+			}
+
+			// Открываем файл для загрузки в новой вкладке
+			window.open(fileUrl, '_blank')
+		} catch (err) {
+			console.error('Ошибка при скачивании файла:', err)
+			alert('Ошибка при скачивании файла. Пожалуйста, попробуйте еще раз.')
+		}
+	}
+
 	// Заглушка для демонстрационных данных, если API недоступен
 	const loadDemoData = () => {
 		const demoSheetMusic: SheetMusicType[] = [
@@ -450,6 +482,22 @@ export default function SheetMusicPage() {
 		}
 	}, [loading, sheetMusic])
 
+	// Получение уникальных значений для фильтров
+	const difficulties = ['all', 'beginner', 'intermediate', 'advanced']
+
+	// Словарь для перевода сложности
+	const difficultyLabels: Record<string, string> = {
+		beginner: 'Бастауыш',
+		intermediate: 'Орташа',
+		advanced: 'Күрделі',
+		all: 'Барлық деңгей',
+	}
+
+	// Функция для получения метки сложности
+	const getDifficultyLabel = (difficultyKey: string): string => {
+		return difficultyLabels[difficultyKey] || difficultyKey
+	}
+
 	return (
 		<div className='bg-gray-50 min-h-screen'>
 			<div className='container mx-auto px-4 py-8'>
@@ -552,6 +600,7 @@ export default function SheetMusicPage() {
 									<p className='text-[17px] text-[#2A3F54] mb-4'>
 										{item.composer || item.authorName}
 									</p>
+
 									{/* Действия */}
 									<div className='mt-auto flex justify-between items-center'>
 										<div className='flex gap-2'>
@@ -561,10 +610,9 @@ export default function SheetMusicPage() {
 											>
 												Қарау
 											</Link>
-											{item.fileUrl && (
+											{item.id && (
 												<a
-													href={item.fileUrl}
-													download
+													href={`/api/sheet-music/${item.id}/download`}
 													target='_blank'
 													rel='noopener noreferrer'
 													className='px-4 py-2 bg-[#E4B87C] text-[#2A3F54] text-[15px] font-medium rounded-[20px] flex items-center justify-center ml-2'
@@ -573,6 +621,7 @@ export default function SheetMusicPage() {
 												</a>
 											)}
 										</div>
+
 										<button
 											onClick={() =>
 												handleFavoriteToggle(item.id, Boolean(item.isFavorite))
