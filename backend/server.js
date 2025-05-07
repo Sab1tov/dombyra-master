@@ -75,6 +75,17 @@ if (!fs.existsSync(avatarsDir)) {
 	console.log('Создана директория для аватаров:', avatarsDir)
 }
 
+// === [Автоматическое создание директорий для Volume Railway] ===
+const volumeDirs = ['/data/sheet_music', '/data/avatars', '/data/videos']
+
+for (const dir of volumeDirs) {
+	if (!fs.existsSync(dir)) {
+		fs.mkdirSync(dir, { recursive: true })
+		console.log('Создана директория для Volume:', dir)
+	}
+}
+// === [Конец блока создания директорий] ===
+
 // Добавляем маршруты - подключаем только существующие маршруты
 app.use('/api/auth', authRoutes)
 app.use('/api/video-lessons', videoLessonRoutes)
