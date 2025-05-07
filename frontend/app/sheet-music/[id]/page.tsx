@@ -282,14 +282,6 @@ const SheetMusicPage = () => {
 		}
 	}
 
-	// Обработчик загрузки файла
-	const handleDownload = async () => {
-		if (!sheetMusic?.fileUrl) return
-
-		// Открываем файл для загрузки
-		window.open(sheetMusic.fileUrl, '_blank')
-	}
-
 	// Функция для форматирования сложности
 	const formatDifficulty = (difficulty: string) => {
 		const map: Record<string, string> = {
@@ -458,26 +450,30 @@ const SheetMusicPage = () => {
 									</div>
 									<p className='text-gray-700 mb-6'>{sheetMusic.description}</p>
 									<div className='flex flex-wrap gap-3 mb-6'>
-										<button
-											onClick={handleDownload}
-											className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center'
-										>
-											<svg
-												xmlns='http://www.w3.org/2000/svg'
-												className='h-5 w-5 mr-2'
-												fill='none'
-												viewBox='0 0 24 24'
-												stroke='currentColor'
+										{sheetMusic.id && (
+											<a
+												href={`/api/sheet-music/${sheetMusic.id}/download`}
+												target='_blank'
+												rel='noopener noreferrer'
+												className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center'
 											>
-												<path
-													strokeLinecap='round'
-													strokeLinejoin='round'
-													strokeWidth={2}
-													d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4'
-												/>
-											</svg>
-											Жүктеу
-										</button>
+												<svg
+													xmlns='http://www.w3.org/2000/svg'
+													className='h-5 w-5 mr-2'
+													fill='none'
+													viewBox='0 0 24 24'
+													stroke='currentColor'
+												>
+													<path
+														strokeLinecap='round'
+														strokeLinejoin='round'
+														strokeWidth={2}
+														d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4'
+													/>
+												</svg>
+												Жүктеу
+											</a>
+										)}
 										{user && (
 											<button
 												onClick={toggleFavorite}
