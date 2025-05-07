@@ -252,46 +252,38 @@ router.get('/:id', async (req, res) => {
 	}
 })
 
-// Скачать файл (доступно всем пользователям)
-router.get('/download/:id', async (req, res) => {
+// Новый эндпоинт скачивания нот
+router.get('/:id/download', async (req, res) => {
 	try {
 		const { id } = req.params
-
-		const note = await pool.query(
-			'SELECT file_path FROM sheet_music WHERE id = $1',
-			[id]
-		)
-
-		if (note.rows.length === 0) {
-			return res.status(404).json({ error: 'Файл не найден в базе данных' })
+		// Получаем информацию о нотах
+		const sheet = await pool.query('SELECT * FROM sheet_music WHERE id = $1', [
+			id,
+		])
+		if (sheet.rows.length === 0) {
+			return res.status(404).json({ error: 'Ноты не найдены' })
 		}
-
-		const filePath = note.rows[0].file_path
+		const filePath = sheet.rows[0].file_path
 		if (!filePath) {
-			return res.status(404).json({ error: 'Файл отсутствует' })
+			return res.status(404).json({ error: 'Файл нот не найден' })
 		}
-
-		// Исправлено: всегда ищем файл в /data/sheet_music/ по имени файла
+		// Формируем абсолютный путь к файлу
 		const fullPath = path.join('/data/sheet_music/', path.basename(filePath))
-
 		try {
 			await fs.access(fullPath)
 		} catch {
 			return res.status(404).json({ error: 'Файл не найден на сервере' })
 		}
-
-		// Увеличиваем счетчик скачиваний только если пользователь авторизован
-		if (req.user) {
-			await pool.query(
-				'UPDATE sheet_music SET downloads = downloads + 1 WHERE id = $1',
-				[id]
-			)
-		}
-
-		res.download(fullPath)
+		// Увеличиваем счетчик скачиваний
+		await pool.query(
+			'UPDATE sheet_music SET downloads = downloads + 1 WHERE id = $1',
+			[id]
+		)
+		// Отправляем файл с корректным именем
+		res.download(fullPath, `${sheet.rows[0].title || 'sheet'}.pdf`)
 	} catch (error) {
-		console.error('Ошибка при скачивании файла:', error)
-		res.status(500).json({ error: 'Ошибка сервера' })
+		console.error('Ошибка при скачивании нот:', error)
+		res.status(500).json({ error: 'Ошибка сервера при скачивании нот' })
 	}
 })
 
@@ -586,41 +578,6 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 	} catch (error) {
 		console.error('Ошибка при удалении нот:', error)
 		res.status(500).json({ error: 'Ошибка сервера при удалении нот' })
-	}
-})
-
-// ✅ Скачать файл нот (увеличивает счетчик скачиваний)
-router.get('/:id/download', async (req, res) => {
-	try {
-		const { id } = req.params
-
-		// Получаем информацию о нотах
-		const sheet = await pool.query('SELECT * FROM sheet_music WHERE id = $1', [
-			id,
-		])
-
-		if (sheet.rows.length === 0) {
-			return res.status(404).json({ error: 'Ноты не найдены' })
-		}
-
-		if (!sheet.rows[0].file_path) {
-			return res.status(404).json({ error: 'Файл нот не найден' })
-		}
-
-		// Увеличиваем счетчик скачиваний
-		await pool.query(
-			'UPDATE sheet_music SET downloads = downloads + 1 WHERE id = $1',
-			[id]
-		)
-
-		// Формируем путь к файлу
-		const filePath = path.join(__dirname, '..', sheet.rows[0].file_path)
-
-		// Отправляем файл
-		res.download(filePath, `${sheet.rows[0].title}.pdf`)
-	} catch (error) {
-		console.error('Ошибка при скачивании нот:', error)
-		res.status(500).json({ error: 'Ошибка сервера при скачивании нот' })
 	}
 })
 
