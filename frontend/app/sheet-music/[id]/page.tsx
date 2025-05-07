@@ -74,14 +74,18 @@ const SheetMusicPage = () => {
 						if (favoritesResponse.status === 200) {
 							// Ищем ID текущего материала в списке избранных
 							const favoriteIds = favoritesResponse.data
-								.map((item: any) =>
-									typeof item.id === 'number'
-										? item.id
-										: item.sheet_music_id
-										? Number(item.sheet_music_id)
-										: Number(item.id)
+								.map(
+									(item: {
+										id: number | string
+										sheet_music_id: number | string
+									}) =>
+										typeof item.id === 'number'
+											? item.id
+											: item.sheet_music_id
+											? Number(item.sheet_music_id)
+											: Number(item.id)
 								)
-								.filter((id: any) => !isNaN(id))
+								.filter((id: number | string) => !isNaN(Number(id)))
 
 							isFavoriteStatus = favoriteIds.includes(Number(id))
 							console.log(`Статус избранного из API: ${isFavoriteStatus}`)
