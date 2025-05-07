@@ -16,10 +16,18 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
 }) => {
 	const [isClient, setIsClient] = useState(false)
 	const [loading, setLoading] = useState(true)
+	const [isMobile, setIsMobile] = useState(false)
 
 	// Проверяем, что компонент рендерится на клиенте
 	useEffect(() => {
 		setIsClient(true)
+		// Определяем мобильное устройство
+		if (typeof window !== 'undefined') {
+			const userAgent = navigator.userAgent || navigator.vendor || window.opera
+			setIsMobile(
+				/android|iphone|ipad|ipod|opera mini|iemobile|mobile/i.test(userAgent)
+			)
+		}
 		// Имитируем обратный вызов с одной страницей для совместимости
 		if (onLoadSuccess) {
 			onLoadSuccess({ numPages: 1 })
@@ -44,7 +52,19 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
 	const pdfUrlWithParams = `${pdfUrl}#view=FitH&toolbar=1&navpanes=0`
 
 	return (
-		<div className='relative flex justify-center w-full mb-8'>
+		<div className='relative flex flex-col items-center w-full mb-8'>
+			{/* Кнопка для мобильных устройств */}
+			{isMobile && (
+				<a
+					href={pdfUrl}
+					target='_blank'
+					rel='noopener noreferrer'
+					className='mb-4 px-4 py-2 bg-blue-600 text-white rounded shadow font-semibold text-base hover:bg-blue-700 transition-colors'
+					style={{ zIndex: 20 }}
+				>
+					Ашу басқа қолданбада
+				</a>
+			)}
 			{loading && (
 				<div className='absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center bg-white bg-opacity-80 z-10 min-h-[800px]'>
 					<div className='animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900'></div>
