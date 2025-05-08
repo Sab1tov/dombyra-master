@@ -5,7 +5,7 @@ import api from '@/services/axiosInstance'
 import { useAuthStore } from '@/store/authStore'
 import Cookies from 'js-cookie'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 export default function SheetMusicPage() {
 	const { user } = useAuthStore()
@@ -77,56 +77,53 @@ export default function SheetMusicPage() {
 		)
 	}
 
-	// Загрузка нотных материалов
-	useEffect(() => {
-		const fetchSheetMusic = async () => {
-			try {
-				if (sheetMusic.length === 0) setLoading(true)
-				setError(null)
-				const response = await api.get('/sheet-music', {
-					params: { limit, page },
-				})
-				const processedData = response.data.map((item: SheetMusicType) => ({
-					...item,
-					isFavorite: favoritesLoaded
-						? favoriteIds.includes(item.id)
-						: item.isFavorite || item.is_favorite || false,
-				}))
-				setSheetMusic(processedData)
-				setFilteredSheetMusic(processedData)
-				setHasNextPage(processedData.length === limit)
-				setLoading(false)
-			} catch (err) {
-				console.error('Ошибка при загрузке нот:', err)
-				setError('Не удалось загрузить ноты. Пожалуйста, попробуйте позже.')
-			}
-		}
-		fetchSheetMusic()
-	}, [favoritesLoaded, page])
+	// Функция для загрузки нотных материалов (вынесена как useCallback)
+	const fetchSheetMusic = useCallback(async () => {
+		try {
+			setLoading(true)
+			setError(null)
 
-	// Фильтрация нот при изменении фильтров
+			// Передаем searchQuery как параметр для серверного поиска
+			const response = await api.get('/sheet-music', {
+				params: {
+					limit,
+					page,
+					search: searchQuery, // Добавляем параметр поиска для серверной фильтрации
+				},
+			})
+
+			const processedData = response.data.map((item: SheetMusicType) => ({
+				...item,
+				isFavorite: favoritesLoaded
+					? favoriteIds.includes(item.id)
+					: item.isFavorite || item.is_favorite || false,
+			}))
+
+			setSheetMusic(processedData)
+			setFilteredSheetMusic(processedData)
+			setHasNextPage(processedData.length === limit)
+			setLoading(false)
+		} catch (err) {
+			console.error('Ошибка при загрузке нот:', err)
+			setError('Не удалось загрузить ноты. Пожалуйста, попробуйте позже.')
+			setLoading(false)
+		}
+	}, [favoritesLoaded, page, searchQuery, limit, favoriteIds]) // Добавлен searchQuery в зависимости
+
+	// Загрузка нотных материалов при изменении страницы или поискового запроса
 	useEffect(() => {
+		fetchSheetMusic()
+	}, [fetchSheetMusic])
+
+	// Фильтрация нот по сложности (локально)
+	useEffect(() => {
+		if (sheetMusic.length === 0) return
+
 		let result = [...sheetMusic]
 
-		// Фильтрация по сложности
+		// Фильтрация по сложности происходит на клиенте
 		if (selectedDifficulty !== 'all') {
 			result = result.filter(item => item.difficulty === selectedDifficulty)
-		}
-
-		// Фильтрация по поисковому запросу
-		if (searchQuery) {
-			const query = searchQuery.toLowerCase()
-			result = result.filter(
-				item =>
-					(item.title && item.title.toLowerCase().includes(query)) ||
-					(item.description &&
-						item.description.toLowerCase().includes(query)) ||
-					(item.authorName && item.authorName.toLowerCase().includes(query)) ||
-					(item.composer && item.composer.toLowerCase().includes(query)) ||
-					(item.tags &&
-						Array.isArray(item.tags) &&
-						item.tags.some(tag => tag && tag.toLowerCase().includes(query)))
-			)
 		}
 
 		// Сортируем по новизне
@@ -137,7 +134,12 @@ export default function SheetMusicPage() {
 		)
 
 		setFilteredSheetMusic(result)
-	}, [sheetMusic, selectedDifficulty, searchQuery])
+	}, [sheetMusic, selectedDifficulty])
+
+	// При изменении поискового запроса сбрасываем страницу на первую
+	useEffect(() => {
+		setPage(1)
+	}, [searchQuery])
 
 	// Обработчик добавления/удаления из избранного
 	const handleFavoriteToggle = async (id: number, isFavorite: boolean) => {
