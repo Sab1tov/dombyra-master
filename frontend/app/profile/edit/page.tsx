@@ -367,7 +367,7 @@ export default function EditProfilePage() {
 		<div className='container mx-auto px-4 py-8'>
 			<div className='max-w-[600px] mx-auto bg-white rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]'>
 				<div className='bg-[#2A3F54] text-white px-6 py-4 rounded-t-[10px]'>
-					<h1 className='text-2xl font-bold'>Редактирование профиля</h1>
+					<h1 className='text-2xl font-bold'>Профильді өзгерту</h1>
 				</div>
 
 				<form onSubmit={handleSubmit} className='p-8'>
@@ -505,8 +505,8 @@ export default function EditProfilePage() {
 						</div>
 						<p className='text-sm text-gray-500'>
 							{previewUrl || profileData.avatar
-								? 'Нажмите на аватар для изменения или удаления'
-								: 'Нажмите на аватар для загрузки изображения'}
+								? 'Аватарды өзгерту үшін немесе жою үшін оған басыңыз'
+								: 'Аватарды қосу үшін оған басыңыз'}
 						</p>
 						{errors.avatar && (
 							<p className='text-red-500 text-sm mt-1'>{errors.avatar}</p>

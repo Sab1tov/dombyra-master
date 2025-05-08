@@ -200,50 +200,7 @@ export default function ProfilePage() {
 						uploadedSheetMusicCount = 0
 						setRecentSheetMusic([])
 
-						// Закомментируем или удалим код загрузки демо-данных, чтобы всегда показывать реальные данные
-						/*
-						// Если эндпоинт не реализован, продолжаем выполнение, не прерывая загрузку профиля
-						// В режиме разработки можем использовать демо-данные
-						if (process.env.NODE_ENV === 'development') {
-							console.log(
-								'🧪 В режиме разработки устанавливаем демо-значение для загруженных нот: 3'
-							)
-							uploadedSheetMusicCount = 3
-							setRecentSheetMusic([
-								{
-									id: 101,
-									title: 'Адай (Загружено)',
-									composer: 'Құрманғазы',
-									type: 'sheet_music',
-									thumbnailUrl: '/images/demo/sheet1.jpg',
-									addedAt: new Date().toISOString(),
-									progress: 100,
-									userId: 0,
-								},
-								{
-									id: 102,
-									title: 'Сарыарқа (Загружено)',
-									composer: 'Құрманғазы',
-									type: 'sheet_music',
-									thumbnailUrl: '/images/demo/sheet2.jpg',
-									addedAt: new Date().toISOString(),
-									progress: 100,
-									userId: 0,
-								},
-								{
-									id: 103,
-									title: 'Балбырауын (Загружено)',
-									composer: 'Құрманғазы',
-									type: 'sheet_music',
-									thumbnailUrl: '/images/demo/sheet3.jpg',
-									addedAt: new Date().toISOString(),
-									progress: 100,
-									userId: 0,
-								},
-							])
-						}
-						*/
-					}
+						
 
 					// Создаем статистику с использованием даты регистрации
 					const registeredHours = profileData.registeredAt
@@ -485,7 +442,7 @@ export default function ProfilePage() {
 					className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative'
 					role='alert'
 				>
-					<strong className='font-bold'>Ошибка!</strong>
+					<strong className='font-bold'>Қате!</strong>
 					<span className='block sm:inline'> {error}</span>
 				</div>
 			</div>
@@ -592,7 +549,7 @@ export default function ProfilePage() {
 								className='px-4 py-2 bg-[#2A3F54] text-white rounded hover:bg-opacity-90 transition text-sm'
 								onClick={() => router.push('/profile/edit')}
 							>
-								Редактировать профиль
+								Профильді өзгерту
 							</button>
 							<button
 								className='px-4 py-2 bg-[#E35F5F] text-white rounded hover:bg-opacity-90 transition text-sm'
