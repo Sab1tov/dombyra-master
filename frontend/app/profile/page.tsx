@@ -199,8 +199,7 @@ export default function ProfilePage() {
 						// Устанавливаем пустой массив вместо демо-данных
 						uploadedSheetMusicCount = 0
 						setRecentSheetMusic([])
-
-						
+					}
 
 					// Создаем статистику с использованием даты регистрации
 					const registeredHours = profileData.registeredAt
@@ -549,7 +548,7 @@ export default function ProfilePage() {
 								className='px-4 py-2 bg-[#2A3F54] text-white rounded hover:bg-opacity-90 transition text-sm'
 								onClick={() => router.push('/profile/edit')}
 							>
-								Профильді өзгерту
+								Профилді өзгерту
 							</button>
 							<button
 								className='px-4 py-2 bg-[#E35F5F] text-white rounded hover:bg-opacity-90 transition text-sm'
