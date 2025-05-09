@@ -50,14 +50,16 @@ const Navbar = () => {
 			<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
 				<div className='flex justify-between h-16'>
 					<div className='flex items-center'>
-						<Link href='/' className='flex items-center gap-5'>
+						<Link href='/' className='flex items-center gap-2 sm:gap-5'>
 							<Image
 								src='/images/logo/logo.svg'
 								alt='Dombra Master Logo'
 								width={30}
 								height={30}
 							/>
-							<span className='text-3xl font-bold'>Dombra Master</span>
+							<span className='text-xl sm:text-2xl md:text-3xl font-bold'>
+								Dombra Master
+							</span>
 						</Link>
 					</div>
 
@@ -109,12 +111,12 @@ const Navbar = () => {
 						)}
 					</div>
 
-					{/* Мобильное меню */}
+					{/* Мобильное меню (бургер) */}
 					<div className='flex items-center md:hidden'>
 						<button
 							onClick={() => setIsMenuOpen(!isMenuOpen)}
 							className='inline-flex items-center justify-center p-2 rounded-md text-white hover:text-[#E4B87C]'
-							aria-expanded='false'
+							aria-expanded={isMenuOpen}
 						>
 							<span className='sr-only'>Открыть меню</span>
 							{/* Иконка меню/закрытия */}
@@ -154,16 +156,20 @@ const Navbar = () => {
 			</div>
 
 			{/* Мобильное меню, открывается/закрывается */}
-			<div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}>
+			<div
+				className={`${
+					isMenuOpen ? 'block' : 'hidden'
+				} md:hidden bg-[#2A3F54] shadow-lg`}
+			>
 				<div className='px-2 pt-2 pb-3 space-y-1'>
 					{menuItems.map(item => (
 						<Link
 							key={item.path}
 							href={item.path}
-							className={`block px-3 py-2 text-base font-semibold ${
+							className={`block px-3 py-2 text-base font-semibold rounded-md ${
 								isActive(item.path)
-									? 'text-[#E4B87C]'
-									: 'text-white hover:text-[#E4B87C]'
+									? 'bg-[#2A3F54] text-[#E4B87C]'
+									: 'text-white hover:bg-[#384C63] hover:text-[#E4B87C]'
 							}`}
 							onClick={() => setIsMenuOpen(false)}
 						>
@@ -189,8 +195,10 @@ const Navbar = () => {
 							<div className='mt-3 space-y-1'>
 								<Link
 									href='/profile'
-									className={`block px-4 py-2 text-base font-semibold ${
-										isActive('/profile') ? 'text-[#E4B87C]' : 'text-[#E4B87C]'
+									className={`block px-4 py-2 text-base font-semibold rounded-md ${
+										isActive('/profile')
+											? 'bg-[#2A3F54] text-[#E4B87C]'
+											: 'text-[#E4B87C] hover:bg-[#384C63]'
 									}`}
 									onClick={() => setIsMenuOpen(false)}
 								>
@@ -198,7 +206,7 @@ const Navbar = () => {
 								</Link>
 								<button
 									onClick={handleLogout}
-									className='block w-full text-left px-4 py-2 text-base font-semibold text-white hover:text-[#E4B87C]'
+									className='block w-full text-left px-4 py-2 text-base font-semibold text-white hover:bg-[#384C63] hover:text-[#E4B87C] rounded-md'
 								>
 									Шығу
 								</button>
@@ -211,7 +219,7 @@ const Navbar = () => {
 									setIsMenuOpen(false)
 									openModal('login')
 								}}
-								className='block text-base font-semibold text-white hover:text-[#E4B87C]'
+								className='block w-full text-left px-4 py-2 text-base font-semibold text-white hover:bg-[#384C63] hover:text-[#E4B87C] rounded-md'
 							>
 								Кіру
 							</button>
@@ -220,7 +228,7 @@ const Navbar = () => {
 									setIsMenuOpen(false)
 									openModal('register')
 								}}
-								className='block text-base font-semibold text-white hover:text-[#E4B87C] mt-2'
+								className='block w-full text-left px-4 py-2 text-base font-semibold text-white hover:bg-[#384C63] hover:text-[#E4B87C] rounded-md mt-2'
 							>
 								Тіркелу
 							</button>

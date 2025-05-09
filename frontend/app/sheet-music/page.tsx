@@ -447,10 +447,10 @@ export default function SheetMusicPage() {
 
 	return (
 		<div className='bg-gray-50 min-h-screen'>
-			<div className='container mx-auto px-4 py-8'>
+			<div className='container mx-auto px-4 py-4 sm:py-8'>
 				<div className='max-w-6xl mx-auto'>
 					{/* Поиск и фильтры */}
-					<div className='flex flex-col md:flex-row gap-4 mb-8'>
+					<div className='flex flex-col sm:flex-row gap-4 mb-4 sm:mb-8'>
 						{/* Поисковая строка */}
 						<div className='relative flex-1'>
 							<input
@@ -458,15 +458,16 @@ export default function SheetMusicPage() {
 								placeholder='Күй немесе әннің атауын іздеу...'
 								value={searchQuery}
 								onChange={e => setSearchQuery(e.target.value)}
-								className='w-full px-5 py-3 bg-transparent border border-[#2A3F54]/50 rounded-[50px] text-[#2A3F54]/50 text-[20px] focus:outline-none'
+								className='w-full px-4 sm:px-5 py-2 sm:py-3 bg-transparent border border-[#2A3F54]/50 rounded-[50px] text-[16px] sm:text-[20px] text-[#2A3F54]/50 focus:outline-none'
 							/>
 							<button className='absolute right-4 top-1/2 transform -translate-y-1/2'>
 								<svg
-									width='24'
-									height='24'
+									width='20'
+									height='20'
 									viewBox='0 0 24 24'
 									fill='none'
 									xmlns='http://www.w3.org/2000/svg'
+									className='sm:w-6 sm:h-6'
 								>
 									<path
 										d='M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z'
@@ -490,15 +491,15 @@ export default function SheetMusicPage() {
 						{user && (
 							<Link
 								href='/sheet-music/upload'
-								className='inline-flex items-center justify-center bg-[#E4B87C]  text-[#2A3F54] font-medium py-2 px-8 rounded-[50px] transition duration-200 mb-4 md:mb-0'
+								className='inline-flex items-center justify-center bg-[#E4B87C] text-[#2A3F54] font-medium py-2 px-4 sm:px-8 rounded-[50px] transition duration-200 text-sm sm:text-base'
 							>
 								<svg
-									width='24'
-									height='24'
+									width='20'
+									height='20'
 									viewBox='0 0 24 24'
 									fill='none'
 									xmlns='http://www.w3.org/2000/svg'
-									className='h-5 w-5 mr-2'
+									className='h-4 w-4 sm:h-5 sm:w-5 mr-2'
 								>
 									<path
 										d='M9 16H15V10H19L12 3L5 10H9V16ZM5 18H19V20H5V18Z'
@@ -508,9 +509,6 @@ export default function SheetMusicPage() {
 								Жүктеу
 							</Link>
 						)}
-						{/* Фильтр по сложности */}
-
-						{/* Кнопка скачивания */}
 					</div>
 
 					{/* Сообщение об ошибке */}
@@ -529,22 +527,22 @@ export default function SheetMusicPage() {
 
 					{/* Карточки с нотами */}
 					{!loading && filteredSheetMusic.length === 0 ? (
-						<div className='bg-white shadow-md rounded-lg p-8 text-center'>
+						<div className='bg-white shadow-md rounded-lg p-4 sm:p-8 text-center'>
 							<p className='text-lg text-gray-600'>
 								Нет доступных нот по заданным критериям.
 							</p>
 						</div>
 					) : (
-						<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+						<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
 							{filteredSheetMusic.map(item => (
 								<div
 									key={item.id}
-									className='bg-white rounded-[20px] shadow-md overflow-hidden p-6 flex flex-col'
+									className='bg-white rounded-[20px] shadow-md overflow-hidden p-4 sm:p-6 flex flex-col'
 								>
-									<h3 className='text-[20px] font-bold text-[#2A3F54] mb-1'>
+									<h3 className='text-[18px] sm:text-[20px] font-bold text-[#2A3F54] mb-1'>
 										{item.title}
 									</h3>
-									<p className='text-[17px] text-[#2A3F54] mb-4'>
+									<p className='text-[15px] sm:text-[17px] text-[#2A3F54] mb-4'>
 										{item.composer || item.authorName}
 									</p>
 
@@ -553,7 +551,7 @@ export default function SheetMusicPage() {
 										<div className='flex gap-2'>
 											<Link
 												href={`/sheet-music/${item.id}`}
-												className='px-4 py-2 bg-[#2A3F54] text-white text-[15px] font-medium rounded-[20px] flex items-center justify-center'
+												className='px-3 sm:px-4 py-1.5 sm:py-2 bg-[#2A3F54] text-white text-[13px] sm:text-[15px] font-medium rounded-[20px] flex items-center justify-center'
 											>
 												Қарау
 											</Link>
@@ -563,7 +561,7 @@ export default function SheetMusicPage() {
 											onClick={() =>
 												handleFavoriteToggle(item.id, Boolean(item.isFavorite))
 											}
-											className={`w-10 h-10 bg-[#2A3F54] rounded-[10px] flex items-center justify-center ${
+											className={`w-8 h-8 sm:w-10 sm:h-10 bg-[#2A3F54] rounded-[10px] flex items-center justify-center ${
 												!user && 'opacity-50 cursor-not-allowed'
 											}`}
 											title={
@@ -576,8 +574,8 @@ export default function SheetMusicPage() {
 											disabled={!user}
 										>
 											<svg
-												width='24'
-												height='24'
+												width='20'
+												height='20'
 												viewBox='0 0 24 24'
 												fill={
 													(item.isFavorite || item.is_favorite) && user
@@ -589,6 +587,7 @@ export default function SheetMusicPage() {
 												strokeLinecap='round'
 												strokeLinejoin='round'
 												xmlns='http://www.w3.org/2000/svg'
+												className='sm:w-6 sm:h-6'
 											>
 												<path d='M20.84 4.61C20.3292 4.099 19.7228 3.69364 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69364 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.57831 8.50903 2.99871 7.05 2.99871C5.59096 2.99871 4.19169 3.57831 3.16 4.61C2.1283 5.6417 1.54871 7.04097 1.54871 8.5C1.54871 9.95903 2.1283 11.3583 3.16 12.39L4.22 13.45L12 21.23L19.78 13.45L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.0621 22.0329 6.39464C21.7563 5.72718 21.351 5.12075 20.84 4.61Z' />
 											</svg>
@@ -600,18 +599,18 @@ export default function SheetMusicPage() {
 					)}
 
 					{/* Кнопки пагинации под списком нот */}
-					<div className='flex justify-center mt-8 gap-4'>
+					<div className='flex justify-center mt-6 sm:mt-8 gap-3 sm:gap-4'>
 						<button
 							onClick={() => setPage(page - 1)}
 							disabled={page === 1}
-							className='px-6 py-2 rounded-[20px] bg-[#E4B87C] text-[#2A3F54] font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+							className='px-4 sm:px-6 py-1.5 sm:py-2 rounded-[20px] bg-[#E4B87C] text-[#2A3F54] font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base'
 						>
 							Артқа
 						</button>
 						<button
 							onClick={() => setPage(page + 1)}
 							disabled={!hasNextPage}
-							className='px-6 py-2 rounded-[20px] bg-[#E4B87C] text-[#2A3F54] font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+							className='px-4 sm:px-6 py-1.5 sm:py-2 rounded-[20px] bg-[#E4B87C] text-[#2A3F54] font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base'
 						>
 							Алға
 						</button>

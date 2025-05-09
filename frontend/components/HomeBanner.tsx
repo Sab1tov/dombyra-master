@@ -21,7 +21,7 @@ const HomeBanner = () => {
 	}
 
 	return (
-		<section className='relative h-[600px] w-full overflow-hidden'>
+		<section className='relative min-h-[400px] sm:min-h-[500px] md:h-[600px] w-full overflow-hidden'>
 			{/* Фоновое изображение с наложением */}
 			<div className='absolute inset-0'>
 				<Image
@@ -35,14 +35,14 @@ const HomeBanner = () => {
 			</div>
 
 			{/* Контент баннера */}
-			<div className='relative z-10 container mx-auto px-24 h-full flex flex-col justify-center'>
+			<div className='relative z-10 container mx-auto px-4 sm:px-8 md:px-16 lg:px-24 h-full flex flex-col justify-center'>
 				<div className='max-w-2xl'>
-					<h1 className='text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight'>
+					<h1 className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight'>
 						Домбыраға арналған нота
-						<br />
+						<br className='hidden sm:block' />
 						жинағы
 					</h1>
-					<p className='text-lg md:text-xl lg:text-2xl text-white text-opacity-80 mb-8'>
+					<p className='text-base sm:text-lg md:text-xl lg:text-2xl text-white text-opacity-80 mb-6 sm:mb-8'>
 						Домбыра үйренушілерге арналған интерактивті платформа
 					</p>
 
@@ -57,21 +57,21 @@ const HomeBanner = () => {
 								ref={searchInputRef}
 								type='text'
 								placeholder='Күй немесе әннің атауын іздеу...'
-								className='flex-grow bg-transparent text-black placeholder-white placeholder-opacity-50 pl-6 py-4 focus:outline-none'
+								className='w-full flex-grow bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 focus:outline-none text-sm sm:text-base'
 								value={searchQuery}
 								onChange={e => setSearchQuery(e.target.value)}
 							/>
 							<button
 								type='submit'
-								className='px-6 py-4'
+								className='px-4 sm:px-6 py-3 sm:py-4'
 								aria-label='Поиск'
 								onClick={focusSearchInput}
 							>
 								<Image
 									src='/images/banner/search-icon.svg'
 									alt='Поиск'
-									width={24}
-									height={24}
+									width={20}
+									height={20}
 									className='opacity-50'
 								/>
 							</button>
@@ -84,9 +84,9 @@ const HomeBanner = () => {
 					<Image
 						src='/images/banner/dombra-image.svg'
 						alt='Домбыра'
-						width={300}
-						height={500}
-						className='m-32'
+						width={200}
+						height={350}
+						className='m-16 xl:m-32 xl:w-[300px] xl:h-[500px]'
 					/>
 				</div>
 			</div>
