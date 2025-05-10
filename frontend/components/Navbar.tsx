@@ -84,17 +84,15 @@ const Navbar = () => {
 						{user ? (
 							<div className='flex items-center space-x-4'>
 								<Menu as='div' className='relative'>
-									<Menu.Button className='flex items-center p-0 rounded-full border-2 border-[#E4B87C] hover:border-[#E4B87C]/80 transition-colors duration-150 bg-transparent'>
+									<Menu.Button className='flex items-center p-0 rounded-full hover:border-[#E4B87C]/80 transition-colors duration-150 bg-transparent'>
 										{user && user.avatar ? (
-											<div className='w-12 h-12 rounded-full overflow-hidden border-2 border-[#E4B87C] mr-2 flex items-center justify-center'>
-												<img
-													src={user.avatar}
-													alt='Аватарка'
-													className='w-full h-full object-cover'
-												/>
-											</div>
+											<img
+												src={user.avatar}
+												alt='Аватарка'
+												className='w-12 h-12 rounded-full object-cover border-2 border-[#E4B87C]'
+											/>
 										) : (
-											<div className='w-12 h-12 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-xl border-2 border-[#E4B87C] mr-2'>
+											<div className='w-12 h-12 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-xl border-2 border-[#E4B87C]'>
 												{(user && user.username?.[0]?.toUpperCase()) || 'U'}
 											</div>
 										)}
@@ -111,13 +109,12 @@ const Navbar = () => {
 														style={{ minHeight: '56px' }}
 													>
 														{user && user.avatar ? (
-															<div className='w-10 h-10 rounded-full overflow-hidden border border-[#E4B87C] flex items-center justify-center'>
-																<img
-																	src={user.avatar}
-																	alt='Аватарка'
-																	className='w-full h-full object-cover'
-																/>
-															</div>
+															<img
+																src={user.avatar}
+																alt='Аватарка'
+																className='w-10 h-10 rounded-full object-cover border border-[#E4B87C]'
+																style={{ objectPosition: 'center' }}
+															/>
 														) : (
 															<div className='w-10 h-10 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-lg border border-[#E4B87C]'>
 																{(user && user.username?.[0]?.toUpperCase()) ||
