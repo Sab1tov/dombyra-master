@@ -84,31 +84,42 @@ const Navbar = () => {
 						{user ? (
 							<div className='flex items-center space-x-4'>
 								<Menu as='div' className='relative'>
-									<Menu.Button className='flex items-center gap-2 px-4 py-2 rounded-3xl font-semibold text-[#E4B87C] hover:bg-[#E4B87C]/20 transition-colors duration-150'>
-										<span>Жеке кабинет</span>
+									<Menu.Button className='flex items-center px-2 py-1 rounded-full border-2 border-[#E4B87C] hover:border-[#E4B87C]/80 transition-colors duration-150 bg-white'>
 										{user && user.avatar ? (
 											<img
 												src={user.avatar}
 												alt='Аватарка'
-												className='w-8 h-8 rounded-full object-cover border border-[#E4B87C] bg-white'
+												className='w-9 h-9 rounded-full object-cover'
 											/>
 										) : (
-											<div className='w-8 h-8 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-base border border-[#E4B87C]'>
+											<div className='w-9 h-9 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-base border border-[#E4B87C]'>
 												{(user && user.username?.[0]?.toUpperCase()) || 'U'}
 											</div>
 										)}
 									</Menu.Button>
-									<Menu.Items className='absolute right-0 mt-2 w-48 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50'>
+									<Menu.Items className='absolute right-0 mt-2 w-56 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50'>
 										<div className='py-1'>
 											<Menu.Item>
 												{({ active }: { active: boolean }) => (
 													<Link
 														href='/profile'
-														className={`flex items-center gap-2 px-4 py-2 text-sm text-[#2A3F54] ${
+														className={`flex items-center gap-3 px-4 py-3 text-sm text-[#2A3F54] font-semibold ${
 															active ? 'bg-[#E4B87C]/20' : ''
 														}`}
 													>
-														<span>Профиль</span>
+														{user && user.avatar ? (
+															<img
+																src={user.avatar}
+																alt='Аватарка'
+																className='w-8 h-8 rounded-full object-cover border border-[#E4B87C] bg-white'
+															/>
+														) : (
+															<div className='w-8 h-8 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-base border border-[#E4B87C]'>
+																{(user && user.username?.[0]?.toUpperCase()) ||
+																	'U'}
+															</div>
+														)}
+														<span>Жеке кабинет</span>
 													</Link>
 												)}
 											</Menu.Item>
