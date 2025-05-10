@@ -137,15 +137,15 @@ const Navbar = () => {
 														<span className='flex items-center justify-center w-10 h-10'>
 															<svg
 																xmlns='http://www.w3.org/2000/svg'
-																width='40'
-																height='40'
+																width='32'
+																height='32'
 																viewBox='0 0 24 24'
 																fill='none'
 																stroke='currentColor'
 																strokeWidth='2'
 																strokeLinecap='round'
 																strokeLinejoin='round'
-																className='w-10 h-10'
+																className='w-8 h-8'
 															>
 																<path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'></path>
 																<polyline points='16 17 21 12 16 7'></polyline>
