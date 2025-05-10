@@ -103,23 +103,26 @@ const Navbar = () => {
 												{({ active }: { active: boolean }) => (
 													<Link
 														href='/profile'
-														className={`flex items-center gap-3 px-4 py-3 text-base text-[#2A3F54] font-semibold ${
+														className={`flex items-center px-4 py-3 text-base text-[#2A3F54] font-semibold ${
 															active ? 'bg-[#E4B87C]/20' : ''
 														}`}
 														style={{ minHeight: '56px' }}
 													>
-														{user && user.avatar ? (
-															<img
-																src={user.avatar}
-																alt='Аватарка'
-																className='w-10 h-10 rounded-full object-cover border border-[#E4B87C]'
-															/>
-														) : (
-															<div className='w-10 h-10 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-lg border border-[#E4B87C]'>
-																{(user && user.username?.[0]?.toUpperCase()) ||
-																	'U'}
-															</div>
-														)}
+														<div className='w-10 flex justify-center'>
+															{user && user.avatar ? (
+																<img
+																	src={user.avatar}
+																	alt='Аватарка'
+																	className='w-10 h-10 rounded-full object-cover border border-[#E4B87C]'
+																/>
+															) : (
+																<div className='w-10 h-10 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-lg border border-[#E4B87C]'>
+																	{(user &&
+																		user.username?.[0]?.toUpperCase()) ||
+																		'U'}
+																</div>
+															)}
+														</div>
 														<span className='ml-3 whitespace-nowrap'>
 															Жеке кабинет
 														</span>
@@ -130,12 +133,12 @@ const Navbar = () => {
 												{({ active }: { active: boolean }) => (
 													<button
 														onClick={handleLogout}
-														className={`flex items-center gap-3 w-full px-4 py-3 text-base text-[#2A3F54] font-semibold ${
+														className={`flex items-center px-4 py-3 text-base text-[#2A3F54] font-semibold ${
 															active ? 'bg-[#E4B87C]/20' : ''
 														}`}
-														style={{ minHeight: '56px' }}
+														style={{ minHeight: '56px', width: '100%' }}
 													>
-														<span className='flex items-center justify-center w-8 h-8'>
+														<div className='w-10 flex justify-center'>
 															<svg
 																xmlns='http://www.w3.org/2000/svg'
 																width='24'
@@ -152,7 +155,7 @@ const Navbar = () => {
 																<polyline points='16 17 21 12 16 7'></polyline>
 																<line x1='21' y1='12' x2='9' y2='12'></line>
 															</svg>
-														</span>
+														</div>
 														<span className='ml-3 whitespace-nowrap'>Шығу</span>
 													</button>
 												)}
