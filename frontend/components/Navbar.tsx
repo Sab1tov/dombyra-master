@@ -113,7 +113,6 @@ const Navbar = () => {
 																src={user.avatar}
 																alt='Аватарка'
 																className='w-10 h-10 rounded-full object-cover border border-[#E4B87C]'
-																style={{ objectPosition: 'center' }}
 															/>
 														) : (
 															<div className='w-10 h-10 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-lg border border-[#E4B87C]'>
@@ -121,7 +120,7 @@ const Navbar = () => {
 																	'U'}
 															</div>
 														)}
-														<span>Жеке кабинет</span>
+														<span className='ml-3'>Жеке кабинет</span>
 													</Link>
 												)}
 											</Menu.Item>
@@ -152,7 +151,7 @@ const Navbar = () => {
 																<line x1='21' y1='12' x2='9' y2='12'></line>
 															</svg>
 														</span>
-														<span>Шығу</span>
+														<span className='ml-3'>Шығу</span>
 													</button>
 												)}
 											</Menu.Item>
