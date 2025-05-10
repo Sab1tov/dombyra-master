@@ -82,21 +82,40 @@ const Navbar = () => {
 						{/* Элементы для авторизованного/неавторизованного пользователя */}
 						{user ? (
 							<div className='flex items-center space-x-4'>
+								{/* Кнопка Жеке кабинет с аватаркой */}
 								<Link
 									href='/profile'
-									className={`text-xl font-semibold ${
+									className={`flex items-center gap-2 px-4 py-2 rounded-3xl font-semibold transition-colors duration-150 hover:bg-[#E4B87C]/20 ${
 										isActive('/profile')
-											? 'text-[#E4B87C]'
+											? 'bg-[#E4B87C]/10 text-[#E4B87C]'
 											: 'text-[#E4B87C] hover:text-white'
 									}`}
 								>
-									Жеке кабиет
+									{/* Аватарка или инициал */}
+									{user.avatar ? (
+										<img
+											src={user.avatar}
+											alt='Аватарка'
+											className='w-8 h-8 rounded-full object-cover border border-[#E4B87C] bg-white'
+										/>
+									) : (
+										<div className='w-8 h-8 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-base border border-[#E4B87C]'>
+											{user.username?.[0]?.toUpperCase() || 'U'}
+										</div>
+									)}
+									<span>Жеке кабинет</span>
 								</Link>
+								{/* Кнопка Шығу с иконкой выхода */}
 								<button
 									onClick={handleLogout}
-									className='px-5 py-3 bg-[#E4B87C] text-[#2A3F54] rounded-3xl font-semibold'
+									className='flex items-center gap-2 px-4 py-2 bg-[#E4B87C] text-[#2A3F54] rounded-3xl font-semibold transition-colors duration-150 hover:bg-[#E4B87C]/80'
 								>
-									Шығу
+									<img
+										src='/images/icons/navbar-icons/exit-icon.svg'
+										alt='Шығу'
+										className='w-5 h-5'
+									/>
+									<span>Шығу</span>
 								</button>
 							</div>
 						) : (
