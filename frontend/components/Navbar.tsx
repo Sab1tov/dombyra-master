@@ -89,10 +89,10 @@ const Navbar = () => {
 											<img
 												src={user.avatar}
 												alt='Аватарка'
-												className='w-12 h-12 rounded-full object-cover'
+												className='w-12 h-12 rounded-full object-cover border-2 border-[#E4B87C] mr-2'
 											/>
 										) : (
-											<div className='w-12 h-12 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-xl border border-[#E4B87C]'>
+											<div className='w-12 h-12 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-xl border-2 border-[#E4B87C] mr-2'>
 												{(user && user.username?.[0]?.toUpperCase()) || 'U'}
 											</div>
 										)}
