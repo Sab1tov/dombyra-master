@@ -103,7 +103,7 @@ const Navbar = () => {
 												{({ active }: { active: boolean }) => (
 													<Link
 														href='/profile'
-														className={`flex items-center gap-3 px-4 py-3 text-lg text-[#2A3F54] font-semibold ${
+														className={`flex items-center gap-3 px-4 py-3 text-base text-[#2A3F54] font-semibold ${
 															active ? 'bg-[#E4B87C]/20' : ''
 														}`}
 														style={{ minHeight: '56px' }}
@@ -120,7 +120,9 @@ const Navbar = () => {
 																	'U'}
 															</div>
 														)}
-														<span className='ml-3'>Жеке кабинет</span>
+														<span className='ml-3 whitespace-nowrap'>
+															Жеке кабинет
+														</span>
 													</Link>
 												)}
 											</Menu.Item>
@@ -128,7 +130,7 @@ const Navbar = () => {
 												{({ active }: { active: boolean }) => (
 													<button
 														onClick={handleLogout}
-														className={`flex items-center gap-3 w-full px-4 py-3 text-lg text-[#2A3F54] font-semibold ${
+														className={`flex items-center gap-3 w-full px-4 py-3 text-base text-[#2A3F54] font-semibold ${
 															active ? 'bg-[#E4B87C]/20' : ''
 														}`}
 														style={{ minHeight: '56px' }}
@@ -151,7 +153,7 @@ const Navbar = () => {
 																<line x1='21' y1='12' x2='9' y2='12'></line>
 															</svg>
 														</span>
-														<span className='ml-3'>Шығу</span>
+														<span className='ml-3 whitespace-nowrap'>Шығу</span>
 													</button>
 												)}
 											</Menu.Item>
