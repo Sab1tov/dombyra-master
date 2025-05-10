@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuthStore } from '@/store/authStore'
+import { Menu } from '@headlessui/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -82,41 +83,66 @@ const Navbar = () => {
 						{/* Элементы для авторизованного/неавторизованного пользователя */}
 						{user ? (
 							<div className='flex items-center space-x-4'>
-								{/* Кнопка Жеке кабинет с аватаркой */}
-								<Link
-									href='/profile'
-									className={`flex items-center gap-2 px-4 py-2 rounded-3xl font-semibold transition-colors duration-150 hover:bg-[#E4B87C]/20 ${
-										isActive('/profile')
-											? 'bg-[#E4B87C]/10 text-[#E4B87C]'
-											: 'text-[#E4B87C] hover:text-white'
-									}`}
-								>
-									{/* Аватарка или инициал */}
-									{user.avatar ? (
-										<img
-											src={user.avatar}
-											alt='Аватарка'
-											className='w-8 h-8 rounded-full object-cover border border-[#E4B87C] bg-white'
-										/>
-									) : (
-										<div className='w-8 h-8 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-base border border-[#E4B87C]'>
-											{user.username?.[0]?.toUpperCase() || 'U'}
+								<Menu as='div' className='relative'>
+									<Menu.Button className='flex items-center gap-2 px-4 py-2 rounded-3xl font-semibold text-[#E4B87C] hover:bg-[#E4B87C]/20 transition-colors duration-150'>
+										<span>Жеке кабинет</span>
+										{user && user.avatar ? (
+											<img
+												src={user.avatar}
+												alt='Аватарка'
+												className='w-8 h-8 rounded-full object-cover border border-[#E4B87C] bg-white'
+											/>
+										) : (
+											<div className='w-8 h-8 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-base border border-[#E4B87C]'>
+												{(user && user.username?.[0]?.toUpperCase()) || 'U'}
+											</div>
+										)}
+									</Menu.Button>
+									<Menu.Items className='absolute right-0 mt-2 w-48 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50'>
+										<div className='py-1'>
+											<Menu.Item>
+												{({ active }: { active: boolean }) => (
+													<Link
+														href='/profile'
+														className={`flex items-center gap-2 px-4 py-2 text-sm text-[#2A3F54] ${
+															active ? 'bg-[#E4B87C]/20' : ''
+														}`}
+													>
+														<span>Профиль</span>
+													</Link>
+												)}
+											</Menu.Item>
+											<Menu.Item>
+												{({ active }: { active: boolean }) => (
+													<button
+														onClick={handleLogout}
+														className={`flex items-center gap-2 w-full px-4 py-2 text-sm text-[#2A3F54] ${
+															active ? 'bg-[#E4B87C]/20' : ''
+														}`}
+													>
+														<svg
+															xmlns='http://www.w3.org/2000/svg'
+															width='20'
+															height='20'
+															viewBox='0 0 24 24'
+															fill='none'
+															stroke='currentColor'
+															strokeWidth='2'
+															strokeLinecap='round'
+															strokeLinejoin='round'
+															className='w-5 h-5'
+														>
+															<path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'></path>
+															<polyline points='16 17 21 12 16 7'></polyline>
+															<line x1='21' y1='12' x2='9' y2='12'></line>
+														</svg>
+														<span>Шығу</span>
+													</button>
+												)}
+											</Menu.Item>
 										</div>
-									)}
-									<span>Жеке кабинет</span>
-								</Link>
-								{/* Кнопка Шығу с иконкой выхода */}
-								<button
-									onClick={handleLogout}
-									className='flex items-center gap-2 px-4 py-2 bg-[#E4B87C] text-[#2A3F54] rounded-3xl font-semibold transition-colors duration-150 hover:bg-[#E4B87C]/80'
-								>
-									<img
-										src='/images/icons/navbar-icons/exit-icon.svg'
-										alt='Шығу'
-										className='w-5 h-5'
-									/>
-									<span>Шығу</span>
-								</button>
+									</Menu.Items>
+								</Menu>
 							</div>
 						) : (
 							<div className='space-x-4'>
