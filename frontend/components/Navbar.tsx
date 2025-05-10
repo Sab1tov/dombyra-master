@@ -82,7 +82,7 @@ const Navbar = () => {
 
 						{/* Элементы для авторизованного/неавторизованного пользователя */}
 						{user ? (
-							<div className='flex items-center space-x-4'>
+							<div className='flex items-center '>
 								<Menu as='div' className='relative'>
 									<Menu.Button className='flex items-center p-0 rounded-full border-2 border-[#E4B87C] hover:border-[#E4B87C]/80 transition-colors duration-150 bg-transparent'>
 										{user && user.avatar ? (
