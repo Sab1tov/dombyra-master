@@ -84,15 +84,15 @@ const Navbar = () => {
 						{user ? (
 							<div className='flex items-center space-x-4'>
 								<Menu as='div' className='relative'>
-									<Menu.Button className='flex items-center px-2 py-1 rounded-full border-2 border-[#E4B87C] hover:border-[#E4B87C]/80 transition-colors duration-150 bg-white'>
+									<Menu.Button className='flex items-center p-0 rounded-full border-2 border-[#E4B87C] hover:border-[#E4B87C]/80 transition-colors duration-150 bg-transparent'>
 										{user && user.avatar ? (
 											<img
 												src={user.avatar}
 												alt='Аватарка'
-												className='w-9 h-9 rounded-full object-cover'
+												className='w-12 h-12 rounded-full object-cover'
 											/>
 										) : (
-											<div className='w-9 h-9 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-base border border-[#E4B87C]'>
+											<div className='w-12 h-12 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-xl border border-[#E4B87C]'>
 												{(user && user.username?.[0]?.toUpperCase()) || 'U'}
 											</div>
 										)}
@@ -111,10 +111,10 @@ const Navbar = () => {
 															<img
 																src={user.avatar}
 																alt='Аватарка'
-																className='w-8 h-8 rounded-full object-cover border border-[#E4B87C] bg-white'
+																className='w-10 h-10 rounded-full object-cover'
 															/>
 														) : (
-															<div className='w-8 h-8 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-base border border-[#E4B87C]'>
+															<div className='w-10 h-10 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-lg border border-[#E4B87C]'>
 																{(user && user.username?.[0]?.toUpperCase()) ||
 																	'U'}
 															</div>
