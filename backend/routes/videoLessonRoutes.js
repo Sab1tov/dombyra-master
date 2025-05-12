@@ -444,7 +444,7 @@ router.put('/:id/progress', authenticateToken, async (req, res) => {
 			)
 			try {
 				await pool.query(
-					'UPDATE video_views SET progress = $1 WHERE user_id = $2 AND video_id = $3',
+					'UPDATE video_views SET progress = GREATEST(progress, $1) WHERE user_id = $2 AND video_id = $3',
 					[progress, userId, videoId]
 				)
 			} catch (updateErr) {
@@ -453,7 +453,7 @@ router.put('/:id/progress', authenticateToken, async (req, res) => {
 				if (updateErr.message && updateErr.message.includes('updated_at')) {
 					// Пробуем обновить запись без обновления updated_at
 					await pool.query(
-						'UPDATE video_views SET progress = $1 WHERE user_id = $2 AND video_id = $3',
+						'UPDATE video_views SET progress = GREATEST(progress, $1) WHERE user_id = $2 AND video_id = $3',
 						[progress, userId, videoId]
 					)
 				} else {
