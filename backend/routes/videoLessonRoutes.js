@@ -29,7 +29,7 @@ const uploadVideo = multer({
 })
 
 // ✅ Получить все видеоуроки (доступно всем, включая незарегистрированных)
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
 	try {
 		const { search, page = 1, limit = 10 } = req.query
 		const offset = (parseInt(page) - 1) * parseInt(limit)
