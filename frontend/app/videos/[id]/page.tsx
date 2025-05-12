@@ -324,8 +324,11 @@ export default function VideoDetailPage() {
 		const currentTime = video.currentTime
 		const duration = video.duration
 		const percent = (currentTime / duration) * 100
-		const roundedPercent = Math.floor(percent)
+		let roundedPercent = Math.floor(percent)
 
+		if (roundedPercent >= 100) {
+			roundedPercent = 99
+		}
 		maxProgressRef.current = Math.max(maxProgressRef.current, roundedPercent)
 
 		updateProgressBarDirect(maxProgressRef.current)
