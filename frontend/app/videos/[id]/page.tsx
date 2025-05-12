@@ -148,13 +148,10 @@ export default function VideoDetailPage() {
 		)
 		const timePassedSinceLastSave =
 			Date.now() - lastUpdateTimeRef.current > 5000
-
 		const shouldSave =
 			(significantChange && timePassedSinceLastSave) || importantMilestone
-
 		const firstSave =
 			lastSavedProgressRef.current === 0 && maxProgressRef.current > 0
-
 		if (!shouldSave && !firstSave) {
 			console.log(
 				`Пропуск сохранения прогресса: ${maxProgressRef.current}%, ` +
@@ -165,46 +162,23 @@ export default function VideoDetailPage() {
 			)
 			return false
 		}
-
 		try {
 			console.log(
 				`СОХРАНЕНИЕ ПРОГРЕССА: ${maxProgressRef.current}% для видео ${id} (предыдущий: ${lastSavedProgressRef.current}%)`
 			)
-
 			const token = localStorage.getItem('jwtToken')
 			if (!token) {
 				console.error('Ошибка авторизации: токен отсутствует!')
 				toast.error('Для сохранения прогресса необходимо авторизоваться')
 				return false
 			}
-
-			try {
-				const localProgressKey = user
-					? `video-progress-${user.id}-${id}`
-					: `video-progress-guest-${id}`
-				const localProgress = localStorage.getItem(localProgressKey)
-				if (localProgress !== null) {
-					const localProgressNumber = Number(localProgress)
-					if (localProgressNumber > maxProgressRef.current) {
-						console.log(
-							`Обновляем maxProgress из localStorage: ${localProgressNumber}% > ${maxProgressRef.current}%`
-						)
-						maxProgressRef.current = localProgressNumber
-					}
-				}
-			} catch (storageError) {
-				console.warn('Ошибка при чтении localStorage:', storageError)
-			}
-
 			try {
 				const currentProgressResponse = await authenticatedFetch(
 					`/api/video-lessons/${id}/progress`,
 					{ method: 'GET' }
 				)
-
 				if (currentProgressResponse.ok && currentProgressResponse.data) {
 					const serverProgress = currentProgressResponse.data.progress || 0
-
 					if (serverProgress > maxProgressRef.current) {
 						maxProgressRef.current = serverProgress
 						console.log(
@@ -215,7 +189,6 @@ export default function VideoDetailPage() {
 			} catch (progressError) {
 				console.error('Ошибка при получении текущего прогресса:', progressError)
 			}
-
 			const result = await authenticatedFetch(
 				`/api/video-lessons/${id}/progress`,
 				{
@@ -225,71 +198,32 @@ export default function VideoDetailPage() {
 					}),
 				}
 			)
-
 			if (result.ok) {
 				console.log('✅ Прогресс успешно сохранен:', result.data)
-
 				lastSavedProgressRef.current = maxProgressRef.current
 				lastUpdateTimeRef.current = Date.now()
-
 				setProgress(maxProgressRef.current)
 				setIsCompleted(maxProgressRef.current >= 80)
-
 				setDebug(prev => ({
 					...prev,
 					progressSaved: maxProgressRef.current,
 					maxProgress: maxProgressRef.current,
 				}))
-
-				try {
-					const localProgressKey = user
-						? `video-progress-${user.id}-${id}`
-						: `video-progress-guest-${id}`
-					localStorage.setItem(localProgressKey, String(maxProgressRef.current))
-					console.log(
-						`💾 Сохранен прогресс в localStorage: ${maxProgressRef.current}%`
-					)
-				} catch (storageError) {
-					console.warn(
-						'Не удалось сохранить прогресс в localStorage:',
-						storageError
-					)
-				}
-
 				if (importantMilestone || firstSave) {
 					toast.success(`Прогресс сохранен: ${maxProgressRef.current}%`, {
 						id: 'progress-saved',
 						duration: 2000,
 					})
 				}
-
 				return true
 			} else {
 				console.error(
 					'❌ Ошибка сохранения прогресса:',
 					result.error || result.data
 				)
-
 				if (result.status === 401) {
 					console.error('Ошибка авторизации при сохранении прогресса')
-
-					try {
-						const localProgressKey = user
-							? `video-progress-${user.id}-${id}`
-							: `video-progress-guest-${id}`
-						localStorage.setItem(
-							localProgressKey,
-							String(maxProgressRef.current)
-						)
-						console.log('Прогресс сохранен локально как резервный вариант')
-					} catch (storageError) {
-						console.warn(
-							'Не удалось сохранить прогресс в localStorage:',
-							storageError
-						)
-					}
 				}
-
 				return false
 			}
 		} catch (error) {
@@ -596,69 +530,27 @@ export default function VideoDetailPage() {
 		setProgressLoading(true)
 		console.log('🔄 Загрузка прогресса для видео:', id)
 
-		try {
-			const localProgressKey = user
-				? `video-progress-${user.id}-${id}`
-				: `video-progress-guest-${id}`
-			const localProgress = localStorage.getItem(localProgressKey)
-			if (localProgress !== null) {
-				const localProgressNumber = Number(localProgress)
-				console.log(`📋 Найден локальный прогресс: ${localProgressNumber}%`)
-
-				if (localProgressNumber > 0) {
-					setProgress(localProgressNumber)
-					maxProgressRef.current = localProgressNumber
-					lastSavedProgressRef.current = localProgressNumber
-
-					if (progressBarRef.current) {
-						progressBarRef.current.style.width = `${localProgressNumber}%`
-						if (localProgressNumber >= 80) {
-							progressBarRef.current.style.backgroundColor = '#10B981'
-						} else {
-							progressBarRef.current.style.backgroundColor = '#4F46E5'
-						}
-					}
-				}
-			}
-		} catch (error) {
-			console.warn('Ошибка при чтении localStorage:', error)
-		}
-
+		let serverProgress = 0
 		try {
 			const progressResponse = await authenticatedFetch(
 				`/api/video-lessons/${id}/progress`,
 				{ method: 'GET' }
 			)
-
 			if (progressResponse.ok && progressResponse.data) {
-				const serverProgress = progressResponse.data.progress || 0
+				serverProgress = progressResponse.data.progress || 0
 				console.log(`🌐 Загружен прогресс с сервера: ${serverProgress}%`)
-
-				if (serverProgress > maxProgressRef.current) {
-					setProgress(serverProgress)
-					maxProgressRef.current = serverProgress
-					lastSavedProgressRef.current = serverProgress
-
-					if (progressBarRef.current) {
-						progressBarRef.current.style.width = `${serverProgress}%`
-						if (serverProgress >= 80) {
-							progressBarRef.current.style.backgroundColor = '#10B981'
-						} else {
-							progressBarRef.current.style.backgroundColor = '#4F46E5'
-						}
-					}
-
-					setIsCompleted(serverProgress >= 80)
-
-					try {
-						const localProgressKey = user
-							? `video-progress-${user.id}-${id}`
-							: `video-progress-guest-${id}`
-						localStorage.setItem(localProgressKey, String(serverProgress))
-					} catch (error) {
-						console.warn('Ошибка при сохранении в localStorage:', error)
+				setProgress(serverProgress)
+				maxProgressRef.current = serverProgress
+				lastSavedProgressRef.current = serverProgress
+				if (progressBarRef.current) {
+					progressBarRef.current.style.width = `${serverProgress}%`
+					if (serverProgress >= 80) {
+						progressBarRef.current.style.backgroundColor = '#10B981'
+					} else {
+						progressBarRef.current.style.backgroundColor = '#4F46E5'
 					}
 				}
+				setIsCompleted(serverProgress >= 80)
 			} else {
 				console.warn(
 					'Не удалось загрузить прогресс с сервера:',
@@ -670,7 +562,6 @@ export default function VideoDetailPage() {
 		} finally {
 			setProgressLoading(false)
 		}
-
 		return maxProgressRef.current
 	}
 
@@ -892,32 +783,15 @@ export default function VideoDetailPage() {
 				saveProg()
 			}
 		}, 10000)
-
 		const handleBeforeUnload = () => {
 			if (maxProgressRef.current > 0) {
-				try {
-					const localProgressKey = user
-						? `video-progress-${user.id}-${id}`
-						: `video-progress-guest-${id}`
-					localStorage.setItem(localProgressKey, String(maxProgressRef.current))
-					console.log(`🚪 Сохранение перед выходом: ${maxProgressRef.current}%`)
-				} catch (error) {
-					console.error('Ошибка сохранения перед выходом:', error)
-				}
-
-				navigator.sendBeacon(
-					`/api/video-lessons/${id}/progress`,
-					JSON.stringify({ progress: maxProgressRef.current })
-				)
+				saveProg()
 			}
 		}
-
 		window.addEventListener('beforeunload', handleBeforeUnload)
-
 		return () => {
 			clearInterval(forceSaveInterval)
 			window.removeEventListener('beforeunload', handleBeforeUnload)
-
 			if (maxProgressRef.current > 0) {
 				saveProg()
 			}
