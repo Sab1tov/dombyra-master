@@ -137,4 +137,21 @@ router.put('/:id/progress', auth, async (req, res) => {
 	}
 })
 
+// GET /api/video-lessons/:id/progress - получить прогресс пользователя по видео
+router.get('/:id/progress', auth, async (req, res) => {
+	try {
+		const videoId = req.params.id
+		const userId = req.user.id
+		const result = await pool.query(
+			'SELECT progress FROM video_views WHERE user_id = $1 AND video_id = $2',
+			[userId, videoId]
+		)
+		const progress = result.rows.length > 0 ? result.rows[0].progress : 0
+		res.json({ progress })
+	} catch (err) {
+		console.error('Ошибка при получении прогресса:', err)
+		res.status(500).json({ message: 'Ошибка сервера' })
+	}
+})
+
 module.exports = router

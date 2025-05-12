@@ -11,8 +11,45 @@ const montserrat = Montserrat({
 })
 
 export const metadata = {
-	title: 'Dombyra Master',
-	description: 'Қазақтың ұлттық аспабы - домбыраны үйренуге арналған платформа',
+	title: 'Dombra Master - Домбыраға арналған интерактивті платформа',
+	description:
+		'Домбыра үйренушілерге арналған интерактивті платформа - ноталар жинағы, тюнер, оқыту видеолар және басқа да материалдар.',
+	keywords: [
+		'домбыра',
+		'ноталар',
+		'күй',
+		'қазақ музыкасы',
+		'домбыра тюнер',
+		'домбыра оқыту',
+	],
+	openGraph: {
+		title: 'Dombra Master - Домбыраға арналған интерактивті платформа',
+		description:
+			'Домбыра үйренушілерге арналған интерактивті платформа - ноталар жинағы, тюнер, оқыту видеолар және басқа да материалдар.',
+		url: 'https://dombyra-master.vercel.app',
+		siteName: 'Dombra Master',
+		images: [
+			{
+				url: '/images/banner/banner-bg.jpg',
+				width: 1200,
+				height: 630,
+				alt: 'Dombra Master',
+			},
+		],
+		locale: 'kk_KZ',
+		type: 'website',
+	},
+	robots: {
+		index: true,
+		follow: true,
+		googleBot: {
+			index: true,
+			follow: true,
+			'max-video-preview': -1,
+			'max-image-preview': 'large',
+			'max-snippet': -1,
+		},
+	},
 	icons: {
 		icon: '/favicon.ico',
 	},

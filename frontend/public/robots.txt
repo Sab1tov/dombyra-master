@@ -1,0 +1,6 @@
+# Allow all web crawlers
+User-agent: *
+Allow: /
+
+# Set Sitemap URL
+Sitemap: https://dombyra-master.vercel.app/sitemap.xml 

@@ -1,17 +1,5 @@
 'use client'
 
-// ПРИМЕЧАНИЕ: В файле остаются следующие предупреждения линтера:
-// - 'user' is assigned a value but never used (строка 35)
-// - 'loadDemoData' is assigned a value but never used (строка 68)
-// - 'handleTimeUpdate' is assigned a value but never used (строка 434)
-// - Property 'currentTime' does not exist on type 'VideoDetailType' (строка 437)
-//
-// Эти предупреждения не влияют на работу приложения, но для лучшей практики
-// в будущем следует выполнить дополнительный рефакторинг:
-// 1. Удалить неиспользуемую функцию loadDemoData если она больше не требуется
-// 2. Исправить типы для VideoDetailType и правильно работать с currentTime
-// 3. Проверить и исправить любые другие проблемы с типами и неиспользуемыми переменными
-
 import api from '@/services/axiosInstance'
 import { useAuthStore } from '@/store/authStore'
 import Link from 'next/link'
@@ -25,7 +13,7 @@ interface VideoDetailType {
 	description: string
 	thumbnail: string
 	videoUrl: string
-	duration: number // в секундах
+	duration: number
 	difficulty: 'beginner' | 'intermediate' | 'advanced'
 	createdAt: string
 	likes: number
@@ -34,8 +22,6 @@ interface VideoDetailType {
 	authorId?: number
 	isCompleted?: boolean
 	isFavorite?: boolean
-	// Примечание: currentTime используется для доступа к HTMLVideoElement.currentTime,
-	// а не как свойство этого интерфейса. Это вызывает предупреждение линтера.
 }
 
 interface NextVideoType {
@@ -152,193 +138,112 @@ export default function VideoDetailPage() {
 		}, 1000)
 	}, [setCountdown, setShowNextModal])
 
-	const saveProg = useCallback(async () => {
-		// Сохраняем в следующих случаях:
-		// 1. Прогресс увеличился (более чем на 1%)
-		// 2. Прогресс достиг важной отметки (25%, 50%, 75%, 80%, 100%)
-		// 3. Прошло достаточно времени с момента последнего сохранения (не чаще чем раз в 5 секунд)
-		const significantChange =
-			maxProgressRef.current - lastSavedProgressRef.current > 1
-		const importantMilestone = [25, 50, 75, 80, 100].some(
-			milestone =>
-				maxProgressRef.current >= milestone &&
-				lastSavedProgressRef.current < milestone
-		)
-		const timePassedSinceLastSave =
-			Date.now() - lastUpdateTimeRef.current > 5000
-
-		// Решаем, нужно ли отправлять запрос
-		const shouldSave =
-			(significantChange && timePassedSinceLastSave) || importantMilestone
-
-		// Всегда сохраняем при первой загрузке, если есть локальный прогресс выше 0
-		const firstSave =
-			lastSavedProgressRef.current === 0 && maxProgressRef.current > 0
-
-		if (!shouldSave && !firstSave) {
-			console.log(
-				`Пропуск сохранения прогресса: ${maxProgressRef.current}%, ` +
-					`последний: ${lastSavedProgressRef.current}%, ` +
-					`значительное изменение: ${significantChange}, ` +
-					`важная отметка: ${importantMilestone}, ` +
-					`прошло времени: ${Date.now() - lastUpdateTimeRef.current}мс`
+	const saveProg = useCallback(
+		async (force100 = false) => {
+			let progressToSave = maxProgressRef.current
+			if (!force100 && progressToSave >= 100) {
+				progressToSave = 99
+			}
+			const significantChange =
+				progressToSave - lastSavedProgressRef.current > 1
+			const importantMilestone = [25, 50, 75, 80, 99, 100].some(
+				milestone =>
+					progressToSave >= milestone &&
+					lastSavedProgressRef.current < milestone
 			)
-			return false
-		}
-
-		try {
-			console.log(
-				`СОХРАНЕНИЕ ПРОГРЕССА: ${maxProgressRef.current}% для видео ${id} (предыдущий: ${lastSavedProgressRef.current}%)`
-			)
-
-			// Проверка авторизации перед запросом
-			const token = localStorage.getItem('jwtToken')
-			if (!token) {
-				console.error('Ошибка авторизации: токен отсутствует!')
-				toast.error('Для сохранения прогресса необходимо авторизоваться')
+			const timePassedSinceLastSave =
+				Date.now() - lastUpdateTimeRef.current > 5000
+			const shouldSave =
+				(significantChange && timePassedSinceLastSave) || importantMilestone
+			const firstSave = lastSavedProgressRef.current === 0 && progressToSave > 0
+			if (!shouldSave && !firstSave) {
+				console.log(
+					`Пропуск сохранения прогресса: ${progressToSave}%, ` +
+						`последний: ${lastSavedProgressRef.current}%, ` +
+						`значительное изменение: ${significantChange}, ` +
+						`важная отметка: ${importantMilestone}, ` +
+						`прошло времени: ${Date.now() - lastUpdateTimeRef.current}мс`
+				)
 				return false
 			}
-
-			// Проверка, является ли текущий прогресс максимальным из локального хранилища
 			try {
-				// Убедимся, что ключ localStorage включает идентификатор пользователя
-				const localProgressKey = user
-					? `video-progress-${user.id}-${id}`
-					: `video-progress-guest-${id}`
-				const localProgress = localStorage.getItem(localProgressKey)
-				if (localProgress !== null) {
-					const localProgressNumber = Number(localProgress)
-					if (localProgressNumber > maxProgressRef.current) {
-						console.log(
-							`Обновляем maxProgress из localStorage: ${localProgressNumber}% > ${maxProgressRef.current}%`
-						)
-						maxProgressRef.current = localProgressNumber
-					}
-				}
-			} catch (storageError) {
-				console.warn('Ошибка при чтении localStorage:', storageError)
-			}
-
-			// Сначала получим текущий прогресс с сервера, чтобы сравнить
-			try {
-				const currentProgressResponse = await authenticatedFetch(
-					`/api/video-lessons/${id}/progress`,
-					{ method: 'GET' }
+				console.log(
+					`СОХРАНЕНИЕ ПРОГРЕССА: ${progressToSave}% для видео ${id} (предыдущий: ${lastSavedProgressRef.current}%)`
 				)
-
-				if (currentProgressResponse.ok && currentProgressResponse.data) {
-					const serverProgress = currentProgressResponse.data.progress || 0
-
-					// Обновляем максимальный прогресс, если на сервере значение больше
-					if (serverProgress > maxProgressRef.current) {
-						maxProgressRef.current = serverProgress
-						console.log(
-							`Обновлен max прогресс из сервера: ${maxProgressRef.current}%`
-						)
-					}
+				const token = localStorage.getItem('jwtToken')
+				if (!token) {
+					console.error('Ошибка авторизации: токен отсутствует!')
+					toast.error('Для сохранения прогресса необходимо авторизоваться')
+					return false
 				}
-			} catch (progressError) {
-				console.error('Ошибка при получении текущего прогресса:', progressError)
-				// Продолжаем выполнение, даже если не удалось получить текущий прогресс
-			}
-
-			// Используем функцию с авторизацией для сохранения максимального прогресса
-			const result = await authenticatedFetch(
-				`/api/video-lessons/${id}/progress`,
-				{
-					method: 'PUT',
-					body: JSON.stringify({
-						progress: maxProgressRef.current,
-					}),
-				}
-			)
-
-			if (result.ok) {
-				console.log('✅ Прогресс успешно сохранен:', result.data)
-
-				// Заполняем локальные данные
-				lastSavedProgressRef.current = maxProgressRef.current
-				lastUpdateTimeRef.current = Date.now()
-
-				// Обновляем состояние, используя максимальный прогресс
-				setProgress(maxProgressRef.current)
-				setIsCompleted(maxProgressRef.current >= 80)
-
-				// Обновляем отладочную информацию
-				setDebug(prev => ({
-					...prev,
-					progressSaved: maxProgressRef.current,
-					maxProgress: maxProgressRef.current,
-				}))
-
-				// Сохраняем прогресс в локальное хранилище как запасной вариант
 				try {
-					// Убедимся, что ключ localStorage включает идентификатор пользователя
-					const localProgressKey = user
-						? `video-progress-${user.id}-${id}`
-						: `video-progress-guest-${id}`
-					localStorage.setItem(localProgressKey, String(maxProgressRef.current))
-					console.log(
-						`💾 Сохранен прогресс в localStorage: ${maxProgressRef.current}%`
+					const currentProgressResponse = await authenticatedFetch(
+						`/api/video-lessons/${id}/progress`,
+						{ method: 'GET' }
 					)
-				} catch (storageError) {
-					console.warn(
-						'Не удалось сохранить прогресс в localStorage:',
-						storageError
-					)
-				}
-
-				// Показываем уведомление пользователю только при значительных изменениях
-				if (importantMilestone || firstSave) {
-					toast.success(`Прогресс сохранен: ${maxProgressRef.current}%`, {
-						id: 'progress-saved',
-						duration: 2000,
-					})
-				}
-
-				return true
-			} else {
-				console.error(
-					'❌ Ошибка сохранения прогресса:',
-					result.error || result.data
-				)
-
-				// Проверяем, связана ли ошибка с авторизацией
-				if (result.status === 401) {
-					console.error('Ошибка авторизации при сохранении прогресса')
-
-					// Сохраняем в localStorage как резервное решение
-					try {
-						// Убедимся, что ключ localStorage включает идентификатор пользователя
-						const localProgressKey = user
-							? `video-progress-${user.id}-${id}`
-							: `video-progress-guest-${id}`
-						localStorage.setItem(
-							localProgressKey,
-							String(maxProgressRef.current)
-						)
-						console.log('Прогресс сохранен локально как резервный вариант')
-					} catch (storageError) {
-						console.warn(
-							'Не удалось сохранить прогресс в localStorage:',
-							storageError
-						)
+					if (currentProgressResponse.ok && currentProgressResponse.data) {
+						const serverProgress = currentProgressResponse.data.progress || 0
+						if (serverProgress > maxProgressRef.current) {
+							maxProgressRef.current = serverProgress
+							console.log(
+								`Обновлен max прогресс из сервера: ${maxProgressRef.current}%`
+							)
+						}
 					}
+				} catch (progressError) {
+					console.error(
+						'Ошибка при получении текущего прогресса:',
+						progressError
+					)
 				}
-
+				const result = await authenticatedFetch(
+					`/api/video-lessons/${id}/progress`,
+					{
+						method: 'PUT',
+						body: JSON.stringify({
+							progress: progressToSave,
+						}),
+					}
+				)
+				if (result.ok) {
+					console.log('✅ Прогресс успешно сохранен:', result.data)
+					lastSavedProgressRef.current = progressToSave
+					lastUpdateTimeRef.current = Date.now()
+					setProgress(progressToSave)
+					setIsCompleted(progressToSave >= 80)
+					setDebug(prev => ({
+						...prev,
+						progressSaved: progressToSave,
+						maxProgress: progressToSave,
+					}))
+					if (importantMilestone || firstSave) {
+						toast.success(`Прогресс сохранен: ${progressToSave}%`, {
+							id: 'progress-saved',
+							duration: 2000,
+						})
+					}
+					return true
+				} else {
+					console.error(
+						'❌ Ошибка сохранения прогресса:',
+						result.error || result.data
+					)
+					if (result.status === 401) {
+						console.error('Ошибка авторизации при сохранении прогресса')
+					}
+					return false
+				}
+			} catch (error) {
+				console.error('Ошибка при сохранении прогресса:', error)
 				return false
 			}
-		} catch (error) {
-			console.error('Ошибка при сохранении прогресса:', error)
-			return false
-		}
-	}, [id, user, setProgress, setIsCompleted, setDebug])
+		},
+		[id, user, setProgress, setIsCompleted, setDebug]
+	)
 
 	const handleEnded = useCallback(() => {
-		// Сохраняем прогресс без проверки результата
-		saveProg()
+		saveProg(true)
 
-		// Проверяем следующий урок
 		checkNextLesson().then(unlocked => {
 			console.log(
 				`Статус разблокировки следующего урока: ${
@@ -347,7 +252,6 @@ export default function VideoDetailPage() {
 			)
 
 			if (nextVideo) {
-				// Если следующий урок разблокирован, начинаем обратный отсчет для перехода
 				if (!nextVideo.isLocked) {
 					startNextVideoCountdown()
 				} else {
@@ -359,7 +263,6 @@ export default function VideoDetailPage() {
 		})
 	}, [saveProg, checkNextLesson, nextVideo, startNextVideoCountdown])
 
-	// Отслеживаем обратный отсчет и выполняем переход, когда он завершен
 	useEffect(() => {
 		if (
 			countdown === 0 &&
@@ -403,16 +306,6 @@ export default function VideoDetailPage() {
 		setDisplayTime(`0:00 / ${formatTime(video.duration)}`)
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const getDifficultyColor = (difficulty: string): string => {
-		const colors = {
-			beginner: 'bg-green-500',
-			intermediate: 'bg-yellow-500',
-			advanced: 'bg-red-500',
-		}
-		return colors[difficulty as keyof typeof colors] || 'bg-gray-500'
-	}
-
 	const updateProgressBarDirect = (percent: number) => {
 		if (progressBarRef.current) {
 			progressBarRef.current.style.width = `${percent}%`
@@ -431,25 +324,25 @@ export default function VideoDetailPage() {
 		const currentTime = video.currentTime
 		const duration = video.duration
 		const percent = (currentTime / duration) * 100
-		const roundedPercent = Math.floor(percent)
+		let roundedPercent = Math.floor(percent)
 
-		// Обновляем максимальный прогресс, если текущий больше
+		if (roundedPercent >= 100) {
+			roundedPercent = 99
+		}
 		maxProgressRef.current = Math.max(maxProgressRef.current, roundedPercent)
 
-		// Всегда отображаем максимальный достигнутый прогресс в DOM
 		updateProgressBarDirect(maxProgressRef.current)
 
 		const now = Date.now()
 		if (now - lastUpdateTimeRef.current > 250) {
 			lastUpdateTimeRef.current = now
 
-			// Всегда отображаем максимальный достигнутый прогресс
 			setProgress(maxProgressRef.current)
 
 			setDebug({
 				duration: duration,
 				currentTime: currentTime,
-				progress: maxProgressRef.current, // Используем максимальный прогресс
+				progress: maxProgressRef.current,
 				loaded: true,
 			})
 
@@ -468,14 +361,11 @@ export default function VideoDetailPage() {
 		animationFrameId.current = requestAnimationFrame(updateVideoProgress)
 	}
 
-	// Утилитарная функция для выполнения fetch с авторизацией
 	const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
 		try {
-			// Получаем токен из localStorage или cookies
 			const token =
 				typeof window !== 'undefined' ? localStorage.getItem('jwtToken') : null
 
-			// Проверяем наличие токена перед запросом
 			if (!token) {
 				console.error('Отсутствует токен авторизации')
 				setAuthError(true)
@@ -485,37 +375,31 @@ export default function VideoDetailPage() {
 				}
 			}
 
-			// Настраиваем заголовки запроса
 			const headers = {
 				'Content-Type': 'application/json',
 				...(token && { Authorization: `Bearer ${token}` }),
 				...options.headers,
 			}
 
-			// Выполняем запрос с авторизацией
 			const response = await fetch(url, {
 				...options,
 				headers,
-				credentials: 'include', // Включаем куки
+				credentials: 'include',
 			})
 
 			console.log(`Fetch response: ${response.status} ${response.statusText}`)
 
-			// Проверяем авторизацию
 			if (response.status === 401) {
 				console.error('Ошибка авторизации. Необходима авторизация.')
 
-				// Очищаем недействительный токен
 				if (typeof window !== 'undefined') {
 					localStorage.removeItem('jwtToken')
 				}
 
-				// Устанавливаем флаг ошибки авторизации
 				setAuthError(true)
 				return { error: 'Требуется авторизация', status: 401, response }
 			}
 
-			// Обрабатываем ответ в зависимости от Content-Type
 			const contentType = response.headers.get('content-type')
 			let data
 
@@ -552,13 +436,11 @@ export default function VideoDetailPage() {
 		}
 	}
 
-	// Функция для загрузки данных о видео
 	const fetchVideoData = async () => {
 		try {
 			setLoading(true)
 			console.log(`Загрузка данных видеоурока ID: ${id}`)
 
-			// Используем функцию с авторизацией
 			const result = await authenticatedFetch(`/api/video-lessons/${id}`, {
 				method: 'GET',
 			})
@@ -568,39 +450,32 @@ export default function VideoDetailPage() {
 
 				const videoData = result.data
 
-				// Подробный лог информации о прогрессе
 				console.log('Данные о прогрессе:', {
 					progress: videoData.progress,
 					isCompleted: videoData.isCompleted,
 				})
 
-				// Проверка на наличие прогресса в ответе API
 				if (videoData.progress === undefined || videoData.progress === null) {
 					console.warn('Прогресс отсутствует в ответе API!')
 				}
 
 				setVideo(videoData)
 
-				// Инициализируем максимальный прогресс из API
 				const initialProgress =
 					typeof videoData.progress === 'number' ? videoData.progress : 0
 				console.log(`Установка начального прогресса: ${initialProgress}%`)
 
-				// Обновляем значение в maxProgressRef
 				maxProgressRef.current = initialProgress
 
-				// Устанавливаем состояние прогресса и статус завершения
 				setProgress(initialProgress)
 				setIsCompleted(initialProgress >= 80)
 
-				// Инициализируем видеоплеер с текущим временем, если есть прогресс
 				if (videoRef.current && videoData.duration && initialProgress > 0) {
 					const seekPosition = (initialProgress / 100) * videoData.duration
 					console.log(`Установка позиции воспроизведения: ${seekPosition}с`)
 					videoRef.current.currentTime = seekPosition
 				}
 
-				// Обновляем отладочную информацию
 				setDebug(prev => ({
 					...prev,
 					progress: initialProgress,
@@ -608,7 +483,6 @@ export default function VideoDetailPage() {
 					loaded: true,
 				}))
 
-				// Загружаем информацию о следующем видео
 				const nextResult = await authenticatedFetch(
 					`/api/video-lessons/${id}/next`,
 					{
@@ -626,7 +500,6 @@ export default function VideoDetailPage() {
 					)
 				}
 
-				// Отмечаем видео как просмотренное
 				const viewResult = await authenticatedFetch(
 					`/api/video-lessons/${id}/view`,
 					{
@@ -640,13 +513,11 @@ export default function VideoDetailPage() {
 
 				setError(null)
 
-				// Возвращаем данные видео
 				return videoData
 			} else {
 				console.error('Ошибка загрузки видео:', result.error || result.data)
 				setError('Не удалось загрузить видео. Пожалуйста, попробуйте позже.')
 
-				// Проверяем, связана ли ошибка с авторизацией
 				if (result.status === 401) {
 					console.error(
 						'Ошибка авторизации. Токен:',
@@ -667,84 +538,31 @@ export default function VideoDetailPage() {
 		}
 	}
 
-	// Создадим отдельную функцию для загрузки прогресса
 	const loadProgress = async () => {
 		setProgressLoading(true)
 		console.log('🔄 Загрузка прогресса для видео:', id)
 
-		// Сначала проверяем localStorage для быстрого отображения
-		try {
-			// Убедимся, что ключ localStorage включает идентификатор пользователя
-			const localProgressKey = user
-				? `video-progress-${user.id}-${id}`
-				: `video-progress-guest-${id}`
-			const localProgress = localStorage.getItem(localProgressKey)
-			if (localProgress !== null) {
-				const localProgressNumber = Number(localProgress)
-				console.log(`📋 Найден локальный прогресс: ${localProgressNumber}%`)
-
-				// Временно устанавливаем локальный прогресс для мгновенного отображения
-				if (localProgressNumber > 0) {
-					setProgress(localProgressNumber)
-					maxProgressRef.current = localProgressNumber
-					lastSavedProgressRef.current = localProgressNumber
-
-					// Обновляем прогресс-бар напрямую для мгновенного отображения
-					if (progressBarRef.current) {
-						progressBarRef.current.style.width = `${localProgressNumber}%`
-						if (localProgressNumber >= 80) {
-							progressBarRef.current.style.backgroundColor = '#10B981'
-						} else {
-							progressBarRef.current.style.backgroundColor = '#4F46E5'
-						}
-					}
-				}
-			}
-		} catch (error) {
-			console.warn('Ошибка при чтении localStorage:', error)
-		}
-
-		// Затем получаем прогресс с сервера
+		let serverProgress = 0
 		try {
 			const progressResponse = await authenticatedFetch(
 				`/api/video-lessons/${id}/progress`,
 				{ method: 'GET' }
 			)
-
 			if (progressResponse.ok && progressResponse.data) {
-				const serverProgress = progressResponse.data.progress || 0
+				serverProgress = progressResponse.data.progress || 0
 				console.log(`🌐 Загружен прогресс с сервера: ${serverProgress}%`)
-
-				// Устанавливаем серверный прогресс, если он больше локального
-				if (serverProgress > maxProgressRef.current) {
-					setProgress(serverProgress)
-					maxProgressRef.current = serverProgress
-					lastSavedProgressRef.current = serverProgress
-
-					// Обновляем прогресс-бар напрямую
-					if (progressBarRef.current) {
-						progressBarRef.current.style.width = `${serverProgress}%`
-						if (serverProgress >= 80) {
-							progressBarRef.current.style.backgroundColor = '#10B981'
-						} else {
-							progressBarRef.current.style.backgroundColor = '#4F46E5'
-						}
-					}
-
-					// Обновляем статус завершения
-					setIsCompleted(serverProgress >= 80)
-
-					// Обновляем localStorage на всякий случай
-					try {
-						// Убедимся, что ключ localStorage включает идентификатор пользователя
-						const localProgressKey = user
-							? `video-progress-${user.id}-${id}`
-							: `video-progress-guest-${id}`
-						localStorage.setItem(localProgressKey, String(serverProgress))
-					} catch (error) {
-						console.warn('Ошибка при сохранении в localStorage:', error)
+				setProgress(serverProgress)
+				maxProgressRef.current = serverProgress
+				lastSavedProgressRef.current = serverProgress
+				if (progressBarRef.current) {
+					progressBarRef.current.style.width = `${serverProgress}%`
+					if (serverProgress >= 80) {
+						progressBarRef.current.style.backgroundColor = '#10B981'
+					} else {
+						progressBarRef.current.style.backgroundColor = '#4F46E5'
 					}
 				}
+				setIsCompleted(serverProgress >= 80)
 			} else {
 				console.warn(
 					'Не удалось загрузить прогресс с сервера:',
@@ -756,27 +574,42 @@ export default function VideoDetailPage() {
 		} finally {
 			setProgressLoading(false)
 		}
-
 		return maxProgressRef.current
 	}
 
-	// Модифицируем initializeVideo для последовательной загрузки
 	const initializeVideo = async () => {
 		try {
-			// Сначала загружаем прогресс для быстрого отображения
-			const currentProgress = await loadProgress()
-			console.log(`📊 Инициализация с прогрессом: ${currentProgress}%`)
+			// 1. Загружаем прогресс из localStorage и сервера
+			const progressFromLoad = await loadProgress()
+			console.log(`📊 Прогресс после loadProgress: ${progressFromLoad}%`)
 
-			// Затем загружаем данные видео
+			// 2. Загружаем данные видео (и прогресс из объекта видео)
 			const videoData = await fetchVideoData()
+			const progressFromVideo =
+				videoData && typeof videoData.progress === 'number'
+					? videoData.progress
+					: 0
+			console.log(`📊 Прогресс из videoData: ${progressFromVideo}%`)
 
-			// Проверяем, получены ли данные видео
-			if (!videoData) {
-				console.error('Не удалось загрузить данные видео')
-				return
+			// 3. Используем максимальный прогресс
+			const maxProgress = Math.max(progressFromLoad, progressFromVideo)
+			console.log(`✅ Итоговый прогресс для применения: ${maxProgress}%`)
+
+			setProgress(maxProgress)
+			maxProgressRef.current = maxProgress
+			lastSavedProgressRef.current = maxProgress
+			setIsCompleted(maxProgress >= 80)
+
+			if (
+				videoRef.current &&
+				videoData &&
+				videoData.duration &&
+				maxProgress > 0
+			) {
+				const seekPosition = (maxProgress / 100) * videoData.duration
+				videoRef.current.currentTime = seekPosition
 			}
 
-			// Проверяем доступность следующего урока
 			await checkNextLesson()
 		} catch (error) {
 			console.error('Ошибка инициализации видео:', error)
@@ -786,14 +619,11 @@ export default function VideoDetailPage() {
 		}
 	}
 
-	// Модифицируем useEffect для инициализации
 	useEffect(() => {
 		if (id) {
-			// Запускаем инициализацию
 			initializeVideo()
 		}
 
-		// Функция для обновления прогресса при возвращении на страницу
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === 'visible') {
 				console.log('👁️ Страница стала видимой, обновляем прогресс')
@@ -801,10 +631,8 @@ export default function VideoDetailPage() {
 			}
 		}
 
-		// Добавляем обработчик видимости страницы
 		document.addEventListener('visibilitychange', handleVisibilityChange)
 
-		// Очистка при размонтировании
 		return () => {
 			document.removeEventListener('visibilitychange', handleVisibilityChange)
 			if (countdownRef.current) {
@@ -846,19 +674,15 @@ export default function VideoDetailPage() {
 		const saveProgress = () => {
 			if (!video || isNaN(video.duration) || video.duration === 0) return
 
-			// Получаем текущий прогресс видео
 			const currentTime = video.currentTime
 			const duration = video.duration
 			const currentProgress = Math.floor((currentTime / duration) * 100)
 
-			// Обновляем максимальный прогресс, если текущий больше
 			if (currentProgress > maxProgressRef.current) {
 				maxProgressRef.current = currentProgress
 				console.log(`⬆️ Новый макс. прогресс: ${maxProgressRef.current}%`)
 			}
 
-			// Проверяем и с lastSavedProgressRef, чтобы не потерять максимальное значение
-			// если сохраненный на сервере прогресс больше текущего
 			if (lastSavedProgressRef.current > maxProgressRef.current) {
 				maxProgressRef.current = lastSavedProgressRef.current
 				console.log(
@@ -866,15 +690,12 @@ export default function VideoDetailPage() {
 				)
 			}
 
-			// Вызываем функцию сохранения (у нее есть собственные проверки периодичности)
 			saveProg()
 		}
 
 		const startSaveInterval = () => {
-			// Сначала сохраняем текущий прогресс
 			saveProgress()
 
-			// Затем устанавливаем интервал для периодического сохранения (не чаще раз в 30 секунд)
 			saveInterval = setInterval(saveProgress, 30000)
 		}
 
@@ -885,7 +706,7 @@ export default function VideoDetailPage() {
 		const onEnded = () => {
 			stopSaveInterval()
 			stopProgressAnimation()
-			saveProg()
+			saveProg(true)
 			handleEnded()
 		}
 
@@ -940,22 +761,18 @@ export default function VideoDetailPage() {
 		updateVideoProgress,
 	])
 
-	// Редирект на страницу логина при ошибке авторизации
 	useEffect(() => {
 		if (authError) {
-			// Показываем уведомление пользователю
 			toast.error('Для просмотра видеоурока необходимо авторизоваться', {
 				duration: 5000,
 				position: 'top-center',
 			})
 
-			// Выполняем редирект только после того, как компонент уже отрендерен
 			const redirectToLogin = () => {
 				console.log(
 					'Перенаправление на страницу входа из-за ошибки авторизации'
 				)
 
-				// Сохраняем текущий URL для возврата после авторизации
 				if (typeof window !== 'undefined') {
 					sessionStorage.setItem('redirectAfterLogin', `/videos/${id}`)
 				}
@@ -963,17 +780,13 @@ export default function VideoDetailPage() {
 				router.push('/auth/login')
 			}
 
-			// Используем setTimeout, чтобы гарантированно выполнить навигацию после рендеринга
 			const timer = setTimeout(redirectToLogin, 3000)
 
-			// Очищаем таймер при размонтировании
 			return () => clearTimeout(timer)
 		}
 	}, [authError, router, id])
 
-	// Добавим принудительное сохранение прогресса каждые 10 секунд
 	useEffect(() => {
-		// Функция для проверки и сохранения прогресса каждые 10 секунд
 		const forceSaveInterval = setInterval(() => {
 			if (maxProgressRef.current > 0) {
 				console.log(
@@ -981,38 +794,16 @@ export default function VideoDetailPage() {
 				)
 				saveProg()
 			}
-		}, 10000) // 10 секунд
-
-		// Сохраняем прогресс при закрытии/обновлении страницы
+		}, 10000)
 		const handleBeforeUnload = () => {
 			if (maxProgressRef.current > 0) {
-				// Синхронное сохранение в localStorage
-				try {
-					// Убедимся, что ключ localStorage включает идентификатор пользователя
-					const localProgressKey = user
-						? `video-progress-${user.id}-${id}`
-						: `video-progress-guest-${id}`
-					localStorage.setItem(localProgressKey, String(maxProgressRef.current))
-					console.log(`🚪 Сохранение перед выходом: ${maxProgressRef.current}%`)
-				} catch (error) {
-					console.error('Ошибка сохранения перед выходом:', error)
-				}
-
-				// Попытка сохранить на сервер перед выходом (хотя это может не выполниться полностью)
-				navigator.sendBeacon(
-					`/api/video-lessons/${id}/progress`,
-					JSON.stringify({ progress: maxProgressRef.current })
-				)
+				saveProg()
 			}
 		}
-
 		window.addEventListener('beforeunload', handleBeforeUnload)
-
 		return () => {
 			clearInterval(forceSaveInterval)
 			window.removeEventListener('beforeunload', handleBeforeUnload)
-
-			// Последняя попытка сохранить прогресс при размонтировании компонента
 			if (maxProgressRef.current > 0) {
 				saveProg()
 			}
@@ -1198,12 +989,12 @@ export default function VideoDetailPage() {
 												r='10'
 												stroke='currentColor'
 												strokeWidth='4'
-											></circle>
+											/>
 											<path
 												className='opacity-75'
 												fill='currentColor'
 												d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-											></path>
+											/>
 										</svg>
 										Прогресті жүктеу...
 									</span>

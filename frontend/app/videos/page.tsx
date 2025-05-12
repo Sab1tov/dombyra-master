@@ -1,7 +1,6 @@
 'use client'
 
 import api from '@/services/axiosInstance'
-import { useAuthStore } from '@/store/authStore'
 import Link from 'next/link'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -349,7 +348,6 @@ const VideoCard: React.FC<VideoCardProps> = React.memo(
 VideoCard.displayName = 'VideoCard'
 
 export default function VideosPage() {
-	const { user } = useAuthStore()
 	const [videos, setVideos] = useState<VideoLessonType[]>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -449,48 +447,15 @@ export default function VideosPage() {
 
 				const processedVideos = response.data.map((video: VideoLessonType) => {
 					const processedVideo = { ...video }
-
 					if (
 						processedVideo.progress === undefined ||
 						processedVideo.progress === null
 					) {
 						processedVideo.progress = 0
 					}
-
-					try {
-						const localProgressKey = user
-							? `video-progress-${user.id}-${processedVideo.id}`
-							: `video-progress-guest-${processedVideo.id}`
-						const savedProgress = localStorage.getItem(localProgressKey)
-
-						if (savedProgress) {
-							const localProgress = parseInt(savedProgress)
-							if (
-								!isNaN(localProgress) &&
-								localProgress > processedVideo.progress
-							) {
-								console.log(
-									`🔄 Использование локального прогресса для видео #${processedVideo.id}: ${localProgress}% (сервер: ${processedVideo.progress}%)`
-								)
-								processedVideo.progress = localProgress
-
-								api
-									.put(`/video-lessons/${processedVideo.id}/progress`, {
-										progress: localProgress,
-									})
-									.catch(e =>
-										console.warn('Ошибка при обновлении прогресса:', e)
-									)
-							}
-						}
-					} catch (e) {
-						console.warn('Ошибка при проверке локального прогресса:', e)
-					}
-
 					processedVideo.progress = Math.round(processedVideo.progress)
 					processedVideo.isCompleted = processedVideo.progress >= 80
 					processedVideo.isLocked = false
-
 					return processedVideo
 				})
 
@@ -522,7 +487,7 @@ export default function VideosPage() {
 				fetchInProgressRef.current = false
 			}
 		},
-		[videos, user, lastFetchTime, loadDemoData]
+		[videos, lastFetchTime, loadDemoData]
 	)
 
 	// Создаем дебаунсированную версию функции fetchVideos
@@ -586,10 +551,10 @@ export default function VideosPage() {
 			<div className='container mx-auto px-4 py-8'>
 				<div className='max-w-6xl mx-auto'>
 					<div className='mb-16 text-center'>
-						<h1 className='text-[80px] font-bold text-[#2A3F54] mb-4'>
+						<h1 className='text-3xl sm:text-5xl md:text-6xl lg:text-[80px] font-bold text-[#2A3F54] mb-4 break-words text-center'>
 							Оқыту бағдарламасы
 						</h1>
-						<p className='text-[30px] text-[#2A3F54] max-w-4xl mx-auto'>
+						<p className='text-base sm:text-lg md:text-2xl lg:text-[30px] text-[#2A3F54] max-w-4xl mx-auto text-center break-words'>
 							Домбыра ойнауды үйренудің толық курсы. Әр деңгей бойынша
 							жаттығулар, видео сабақтар және интерактивті тапсырмалар.
 						</p>

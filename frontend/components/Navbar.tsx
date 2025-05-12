@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuthStore } from '@/store/authStore'
+import { Menu } from '@headlessui/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -50,14 +51,16 @@ const Navbar = () => {
 			<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
 				<div className='flex justify-between h-16'>
 					<div className='flex items-center'>
-						<Link href='/' className='flex items-center gap-5'>
+						<Link href='/' className='flex items-center gap-2 sm:gap-5'>
 							<Image
 								src='/images/logo/logo.svg'
 								alt='Dombra Master Logo'
 								width={30}
 								height={30}
 							/>
-							<span className='text-3xl font-bold'>Dombra Master</span>
+							<span className='text-xl sm:text-2xl md:text-3xl font-bold'>
+								Dombra Master
+							</span>
 						</Link>
 					</div>
 
@@ -80,22 +83,86 @@ const Navbar = () => {
 						{/* Элементы для авторизованного/неавторизованного пользователя */}
 						{user ? (
 							<div className='flex items-center space-x-4'>
-								<Link
-									href='/profile'
-									className={`text-xl font-semibold ${
-										isActive('/profile')
-											? 'text-[#E4B87C]'
-											: 'text-[#E4B87C] hover:text-white'
-									}`}
-								>
-									Жеке кабиет
-								</Link>
-								<button
-									onClick={handleLogout}
-									className='px-5 py-3 bg-[#E4B87C] text-[#2A3F54] rounded-3xl font-semibold'
-								>
-									Шығу
-								</button>
+								<Menu as='div' className='relative'>
+									<Menu.Button className='flex items-center p-0 rounded-full hover:border-[#E4B87C]/80 transition-colors duration-150 bg-transparent'>
+										{user && user.avatar ? (
+											<img
+												src={user.avatar}
+												alt='Аватарка'
+												className='w-12 h-12 rounded-full object-cover border-2 border-[#E4B87C]'
+											/>
+										) : (
+											<div className='w-12 h-12 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-xl border-2 border-[#E4B87C]'>
+												{(user && user.username?.[0]?.toUpperCase()) || 'U'}
+											</div>
+										)}
+									</Menu.Button>
+									<Menu.Items className='absolute right-0 mt-2 w-56 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50'>
+										<div className='py-1'>
+											<Menu.Item>
+												{({ active }: { active: boolean }) => (
+													<Link
+														href='/profile'
+														className={`flex items-center px-4 py-3 text-base text-[#2A3F54] font-semibold ${
+															active ? 'bg-[#E4B87C]/20' : ''
+														}`}
+														style={{ minHeight: '56px' }}
+													>
+														<div className='w-10 flex justify-center'>
+															{user && user.avatar ? (
+																<img
+																	src={user.avatar}
+																	alt='Аватарка'
+																	className='w-10 h-10 rounded-full object-cover border border-[#E4B87C]'
+																/>
+															) : (
+																<div className='w-10 h-10 rounded-full bg-[#E4B87C] text-[#2A3F54] flex items-center justify-center font-bold text-lg border border-[#E4B87C]'>
+																	{(user &&
+																		user.username?.[0]?.toUpperCase()) ||
+																		'U'}
+																</div>
+															)}
+														</div>
+														<span className='ml-3 whitespace-nowrap'>
+															Жеке кабинет
+														</span>
+													</Link>
+												)}
+											</Menu.Item>
+											<Menu.Item>
+												{({ active }: { active: boolean }) => (
+													<button
+														onClick={handleLogout}
+														className={`flex items-center px-4 py-3 text-base text-[#2A3F54] font-semibold ${
+															active ? 'bg-[#E4B87C]/20' : ''
+														}`}
+														style={{ minHeight: '56px', width: '100%' }}
+													>
+														<div className='w-10 flex justify-center'>
+															<svg
+																xmlns='http://www.w3.org/2000/svg'
+																width='24'
+																height='24'
+																viewBox='0 0 24 24'
+																fill='none'
+																stroke='currentColor'
+																strokeWidth='2'
+																strokeLinecap='round'
+																strokeLinejoin='round'
+																className='w-6 h-6'
+															>
+																<path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'></path>
+																<polyline points='16 17 21 12 16 7'></polyline>
+																<line x1='21' y1='12' x2='9' y2='12'></line>
+															</svg>
+														</div>
+														<span className='ml-3 whitespace-nowrap'>Шығу</span>
+													</button>
+												)}
+											</Menu.Item>
+										</div>
+									</Menu.Items>
+								</Menu>
 							</div>
 						) : (
 							<div className='space-x-4'>
@@ -109,12 +176,12 @@ const Navbar = () => {
 						)}
 					</div>
 
-					{/* Мобильное меню */}
+					{/* Мобильное меню (бургер) */}
 					<div className='flex items-center md:hidden'>
 						<button
 							onClick={() => setIsMenuOpen(!isMenuOpen)}
 							className='inline-flex items-center justify-center p-2 rounded-md text-white hover:text-[#E4B87C]'
-							aria-expanded='false'
+							aria-expanded={isMenuOpen}
 						>
 							<span className='sr-only'>Открыть меню</span>
 							{/* Иконка меню/закрытия */}
@@ -154,16 +221,20 @@ const Navbar = () => {
 			</div>
 
 			{/* Мобильное меню, открывается/закрывается */}
-			<div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}>
+			<div
+				className={`${
+					isMenuOpen ? 'block' : 'hidden'
+				} md:hidden bg-[#2A3F54] shadow-lg`}
+			>
 				<div className='px-2 pt-2 pb-3 space-y-1'>
 					{menuItems.map(item => (
 						<Link
 							key={item.path}
 							href={item.path}
-							className={`block px-3 py-2 text-base font-semibold ${
+							className={`block px-3 py-2 text-base font-semibold rounded-md ${
 								isActive(item.path)
-									? 'text-[#E4B87C]'
-									: 'text-white hover:text-[#E4B87C]'
+									? 'bg-[#2A3F54] text-[#E4B87C]'
+									: 'text-white hover:bg-[#384C63] hover:text-[#E4B87C]'
 							}`}
 							onClick={() => setIsMenuOpen(false)}
 						>
@@ -189,8 +260,10 @@ const Navbar = () => {
 							<div className='mt-3 space-y-1'>
 								<Link
 									href='/profile'
-									className={`block px-4 py-2 text-base font-semibold ${
-										isActive('/profile') ? 'text-[#E4B87C]' : 'text-[#E4B87C]'
+									className={`block px-4 py-2 text-base font-semibold rounded-md ${
+										isActive('/profile')
+											? 'bg-[#2A3F54] text-[#E4B87C]'
+											: 'text-[#E4B87C] hover:bg-[#384C63]'
 									}`}
 									onClick={() => setIsMenuOpen(false)}
 								>
@@ -198,7 +271,7 @@ const Navbar = () => {
 								</Link>
 								<button
 									onClick={handleLogout}
-									className='block w-full text-left px-4 py-2 text-base font-semibold text-white hover:text-[#E4B87C]'
+									className='block w-full text-left px-4 py-2 text-base font-semibold text-white hover:bg-[#384C63] hover:text-[#E4B87C] rounded-md'
 								>
 									Шығу
 								</button>
@@ -211,7 +284,7 @@ const Navbar = () => {
 									setIsMenuOpen(false)
 									openModal('login')
 								}}
-								className='block text-base font-semibold text-white hover:text-[#E4B87C]'
+								className='block w-full text-left px-4 py-2 text-base font-semibold text-white hover:bg-[#384C63] hover:text-[#E4B87C] rounded-md'
 							>
 								Кіру
 							</button>
@@ -220,7 +293,7 @@ const Navbar = () => {
 									setIsMenuOpen(false)
 									openModal('register')
 								}}
-								className='block text-base font-semibold text-white hover:text-[#E4B87C] mt-2'
+								className='block w-full text-left px-4 py-2 text-base font-semibold text-white hover:bg-[#384C63] hover:text-[#E4B87C] rounded-md mt-2'
 							>
 								Тіркелу
 							</button>

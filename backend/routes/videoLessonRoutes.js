@@ -29,7 +29,7 @@ const uploadVideo = multer({
 })
 
 // ✅ Получить все видеоуроки (доступно всем, включая незарегистрированных)
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
 	try {
 		const { search, page = 1, limit = 10 } = req.query
 		const offset = (parseInt(page) - 1) * parseInt(limit)
@@ -125,7 +125,7 @@ router.get('/', async (req, res) => {
 })
 
 // ✅ Получить отдельный видеоурок по ID (доступно всем)
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
 	try {
 		const { id } = req.params
 		// Проверяем наличие пользователя в запросе
@@ -444,7 +444,7 @@ router.put('/:id/progress', authenticateToken, async (req, res) => {
 			)
 			try {
 				await pool.query(
-					'UPDATE video_views SET progress = $1 WHERE user_id = $2 AND video_id = $3',
+					'UPDATE video_views SET progress = GREATEST(progress, $1) WHERE user_id = $2 AND video_id = $3',
 					[progress, userId, videoId]
 				)
 			} catch (updateErr) {
@@ -453,7 +453,7 @@ router.put('/:id/progress', authenticateToken, async (req, res) => {
 				if (updateErr.message && updateErr.message.includes('updated_at')) {
 					// Пробуем обновить запись без обновления updated_at
 					await pool.query(
-						'UPDATE video_views SET progress = $1 WHERE user_id = $2 AND video_id = $3',
+						'UPDATE video_views SET progress = GREATEST(progress, $1) WHERE user_id = $2 AND video_id = $3',
 						[progress, userId, videoId]
 					)
 				} else {
