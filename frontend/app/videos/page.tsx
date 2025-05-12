@@ -551,10 +551,10 @@ export default function VideosPage() {
 			<div className='container mx-auto px-4 py-8'>
 				<div className='max-w-6xl mx-auto'>
 					<div className='mb-16 text-center'>
-						<h1 className='text-[80px] font-bold text-[#2A3F54] mb-4'>
+						<h1 className='text-3xl sm:text-5xl md:text-6xl lg:text-[80px] font-bold text-[#2A3F54] mb-4 break-words text-center'>
 							Оқыту бағдарламасы
 						</h1>
-						<p className='text-[30px] text-[#2A3F54] max-w-4xl mx-auto'>
+						<p className='text-base sm:text-lg md:text-2xl lg:text-[30px] text-[#2A3F54] max-w-4xl mx-auto text-center break-words'>
 							Домбыра ойнауды үйренудің толық курсы. Әр деңгей бойынша
 							жаттығулар, видео сабақтар және интерактивті тапсырмалар.
 						</p>
