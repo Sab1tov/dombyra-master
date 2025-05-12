@@ -138,102 +138,111 @@ export default function VideoDetailPage() {
 		}, 1000)
 	}, [setCountdown, setShowNextModal])
 
-	const saveProg = useCallback(async () => {
-		const significantChange =
-			maxProgressRef.current - lastSavedProgressRef.current > 1
-		const importantMilestone = [25, 50, 75, 80, 100].some(
-			milestone =>
-				maxProgressRef.current >= milestone &&
-				lastSavedProgressRef.current < milestone
-		)
-		const timePassedSinceLastSave =
-			Date.now() - lastUpdateTimeRef.current > 5000
-		const shouldSave =
-			(significantChange && timePassedSinceLastSave) || importantMilestone
-		const firstSave =
-			lastSavedProgressRef.current === 0 && maxProgressRef.current > 0
-		if (!shouldSave && !firstSave) {
-			console.log(
-				`Пропуск сохранения прогресса: ${maxProgressRef.current}%, ` +
-					`последний: ${lastSavedProgressRef.current}%, ` +
-					`значительное изменение: ${significantChange}, ` +
-					`важная отметка: ${importantMilestone}, ` +
-					`прошло времени: ${Date.now() - lastUpdateTimeRef.current}мс`
+	const saveProg = useCallback(
+		async (force100 = false) => {
+			let progressToSave = maxProgressRef.current
+			if (!force100 && progressToSave >= 100) {
+				progressToSave = 99
+			}
+			const significantChange =
+				progressToSave - lastSavedProgressRef.current > 1
+			const importantMilestone = [25, 50, 75, 80, 99, 100].some(
+				milestone =>
+					progressToSave >= milestone &&
+					lastSavedProgressRef.current < milestone
 			)
-			return false
-		}
-		try {
-			console.log(
-				`СОХРАНЕНИЕ ПРОГРЕССА: ${maxProgressRef.current}% для видео ${id} (предыдущий: ${lastSavedProgressRef.current}%)`
-			)
-			const token = localStorage.getItem('jwtToken')
-			if (!token) {
-				console.error('Ошибка авторизации: токен отсутствует!')
-				toast.error('Для сохранения прогресса необходимо авторизоваться')
+			const timePassedSinceLastSave =
+				Date.now() - lastUpdateTimeRef.current > 5000
+			const shouldSave =
+				(significantChange && timePassedSinceLastSave) || importantMilestone
+			const firstSave = lastSavedProgressRef.current === 0 && progressToSave > 0
+			if (!shouldSave && !firstSave) {
+				console.log(
+					`Пропуск сохранения прогресса: ${progressToSave}%, ` +
+						`последний: ${lastSavedProgressRef.current}%, ` +
+						`значительное изменение: ${significantChange}, ` +
+						`важная отметка: ${importantMilestone}, ` +
+						`прошло времени: ${Date.now() - lastUpdateTimeRef.current}мс`
+				)
 				return false
 			}
 			try {
-				const currentProgressResponse = await authenticatedFetch(
-					`/api/video-lessons/${id}/progress`,
-					{ method: 'GET' }
+				console.log(
+					`СОХРАНЕНИЕ ПРОГРЕССА: ${progressToSave}% для видео ${id} (предыдущий: ${lastSavedProgressRef.current}%)`
 				)
-				if (currentProgressResponse.ok && currentProgressResponse.data) {
-					const serverProgress = currentProgressResponse.data.progress || 0
-					if (serverProgress > maxProgressRef.current) {
-						maxProgressRef.current = serverProgress
-						console.log(
-							`Обновлен max прогресс из сервера: ${maxProgressRef.current}%`
-						)
+				const token = localStorage.getItem('jwtToken')
+				if (!token) {
+					console.error('Ошибка авторизации: токен отсутствует!')
+					toast.error('Для сохранения прогресса необходимо авторизоваться')
+					return false
+				}
+				try {
+					const currentProgressResponse = await authenticatedFetch(
+						`/api/video-lessons/${id}/progress`,
+						{ method: 'GET' }
+					)
+					if (currentProgressResponse.ok && currentProgressResponse.data) {
+						const serverProgress = currentProgressResponse.data.progress || 0
+						if (serverProgress > maxProgressRef.current) {
+							maxProgressRef.current = serverProgress
+							console.log(
+								`Обновлен max прогресс из сервера: ${maxProgressRef.current}%`
+							)
+						}
 					}
+				} catch (progressError) {
+					console.error(
+						'Ошибка при получении текущего прогресса:',
+						progressError
+					)
 				}
-			} catch (progressError) {
-				console.error('Ошибка при получении текущего прогресса:', progressError)
-			}
-			const result = await authenticatedFetch(
-				`/api/video-lessons/${id}/progress`,
-				{
-					method: 'PUT',
-					body: JSON.stringify({
-						progress: maxProgressRef.current,
-					}),
-				}
-			)
-			if (result.ok) {
-				console.log('✅ Прогресс успешно сохранен:', result.data)
-				lastSavedProgressRef.current = maxProgressRef.current
-				lastUpdateTimeRef.current = Date.now()
-				setProgress(maxProgressRef.current)
-				setIsCompleted(maxProgressRef.current >= 80)
-				setDebug(prev => ({
-					...prev,
-					progressSaved: maxProgressRef.current,
-					maxProgress: maxProgressRef.current,
-				}))
-				if (importantMilestone || firstSave) {
-					toast.success(`Прогресс сохранен: ${maxProgressRef.current}%`, {
-						id: 'progress-saved',
-						duration: 2000,
-					})
-				}
-				return true
-			} else {
-				console.error(
-					'❌ Ошибка сохранения прогресса:',
-					result.error || result.data
+				const result = await authenticatedFetch(
+					`/api/video-lessons/${id}/progress`,
+					{
+						method: 'PUT',
+						body: JSON.stringify({
+							progress: progressToSave,
+						}),
+					}
 				)
-				if (result.status === 401) {
-					console.error('Ошибка авторизации при сохранении прогресса')
+				if (result.ok) {
+					console.log('✅ Прогресс успешно сохранен:', result.data)
+					lastSavedProgressRef.current = progressToSave
+					lastUpdateTimeRef.current = Date.now()
+					setProgress(progressToSave)
+					setIsCompleted(progressToSave >= 80)
+					setDebug(prev => ({
+						...prev,
+						progressSaved: progressToSave,
+						maxProgress: progressToSave,
+					}))
+					if (importantMilestone || firstSave) {
+						toast.success(`Прогресс сохранен: ${progressToSave}%`, {
+							id: 'progress-saved',
+							duration: 2000,
+						})
+					}
+					return true
+				} else {
+					console.error(
+						'❌ Ошибка сохранения прогресса:',
+						result.error || result.data
+					)
+					if (result.status === 401) {
+						console.error('Ошибка авторизации при сохранении прогресса')
+					}
+					return false
 				}
+			} catch (error) {
+				console.error('Ошибка при сохранении прогресса:', error)
 				return false
 			}
-		} catch (error) {
-			console.error('Ошибка при сохранении прогресса:', error)
-			return false
-		}
-	}, [id, user, setProgress, setIsCompleted, setDebug])
+		},
+		[id, user, setProgress, setIsCompleted, setDebug]
+	)
 
 	const handleEnded = useCallback(() => {
-		saveProg()
+		saveProg(true)
 
 		checkNextLesson().then(unlocked => {
 			console.log(
@@ -694,7 +703,7 @@ export default function VideoDetailPage() {
 		const onEnded = () => {
 			stopSaveInterval()
 			stopProgressAnimation()
-			saveProg()
+			saveProg(true)
 			handleEnded()
 		}
 
