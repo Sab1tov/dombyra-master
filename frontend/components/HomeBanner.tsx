@@ -63,7 +63,7 @@ const HomeBanner = () => {
 									onChange={e => setSearchQuery(e.target.value)}
 								/>
 
-								<button className='absolute right-4 top-1/2 transform -translate-y-1/2'>
+								<button className='absolute right-2 top-1/2 transform -translate-y-1/2'>
 									<svg
 										width='20'
 										height='20'
