@@ -62,12 +62,15 @@ const HomeBanner = () => {
 								onChange={e => setSearchQuery(e.target.value)}
 							/>
 
-							{/* Явно размещаем иконку поиска справа */}
+							{/* Иконка поиска с компонентом Image */}
 							<div className='absolute right-3 top-1/2 transform -translate-y-1/2 z-10'>
-								{/* Заменим на простую иконку магнификационного стекла */}
-								<div className='w-6 h-6 rounded-full border-2 border-white relative'>
-									<div className='absolute w-3 h-2 bg-white rotate-45 bottom-[-4px] right-[-6px] border-r-2 border-b-2 border-white'></div>
-								</div>
+								<Image
+									src='/images/banner/search-icon.svg'
+									alt='Поиск'
+									width={20}
+									height={20}
+									className='opacity-50'
+								/>
 							</div>
 						</div>
 					</form>
