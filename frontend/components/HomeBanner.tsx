@@ -57,25 +57,11 @@ const HomeBanner = () => {
 								<input
 									ref={searchInputRef}
 									type='text'
-									placeholder='Поиск...'
-									className='w-full py-2 px-4 pl-10 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#E4B87C]'
+									placeholder='Күй немесе әннің атауын іздеу...'
+									className='w-full flex-grow bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 focus:outline-none text-sm sm:text-base'
 									value={searchQuery}
 									onChange={e => setSearchQuery(e.target.value)}
 								/>
-								<svg
-									xmlns='http://www.w3.org/2000/svg'
-									className='absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400'
-									fill='none'
-									viewBox='0 0 24 24'
-									stroke='currentColor'
-								>
-									<path
-										strokeLinecap='round'
-										strokeLinejoin='round'
-										strokeWidth={2}
-										d='M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1116.65 2.5a7.5 7.5 0 010 14.15z'
-									/>
-								</svg>
 							</div>
 							<button
 								type='submit'
