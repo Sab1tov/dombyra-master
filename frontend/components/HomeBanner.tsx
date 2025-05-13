@@ -57,7 +57,7 @@ const HomeBanner = () => {
 								ref={searchInputRef}
 								type='text'
 								placeholder='Күй немесе әннің атауын іздеу...'
-								className='flex-grow w-full bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 focus:outline-none text-sm sm:text-base'
+								className='flex-grow w-full bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 pr-12 focus:outline-none text-sm sm:text-base'
 								value={searchQuery}
 								onChange={e => setSearchQuery(e.target.value)}
 							/>
@@ -65,14 +65,31 @@ const HomeBanner = () => {
 								type='submit'
 								className='absolute right-0 top-0 bottom-0 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-center'
 								aria-label='Поиск'
+								onClick={focusSearchInput}
 							>
-								<Image
-									src='/images/banner/search-icon.svg'
-									alt='Поиск'
-									width={20}
-									height={20}
-									className='opacity-50'
-								/>
+								<svg
+									width='20'
+									height='20'
+									viewBox='0 0 24 24'
+									fill='none'
+									xmlns='http://www.w3.org/2000/svg'
+									className='sm:w-6 sm:h-6 opacity-50'
+								>
+									<path
+										d='M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z'
+										stroke='white'
+										strokeWidth='2'
+										strokeLinecap='round'
+										strokeLinejoin='round'
+									/>
+									<path
+										d='M21 21L16.65 16.65'
+										stroke='white'
+										strokeWidth='2'
+										strokeLinecap='round'
+										strokeLinejoin='round'
+									/>
+								</svg>
 							</button>
 						</div>
 					</form>
