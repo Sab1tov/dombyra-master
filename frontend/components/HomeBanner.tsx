@@ -63,7 +63,7 @@ const HomeBanner = () => {
 							/>
 
 							{/* Иконка поиска как встроенный SVG */}
-							<div className='absolute right-4 top-1/2 transform -translate-y-1/2 z-10'>
+							<div className='absolute right-5 top-1/2 transform -translate-y-1/2 z-10'>
 								<svg
 									width='20'
 									height='20'
