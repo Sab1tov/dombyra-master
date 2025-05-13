@@ -52,50 +52,19 @@ const HomeBanner = () => {
 						className='relative max-w-xl opacity-50 outline-white outline-2 outline-offset-1 rounded-full'
 						onClick={focusSearchInput}
 					>
-						<div className='flex items-center bg-white bg-opacity-20 border border-white border-opacity-50 rounded-full overflow-hidden'>
-							<div className='relative w-[95%] sm:w-[97%]'>
-								<input
-									ref={searchInputRef}
-									type='text'
-									placeholder='Күй немесе әннің атауын іздеу...'
-									className='w-full flex-grow bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 pr-2 focus:outline-none text-sm sm:text-base'
-									value={searchQuery}
-									onChange={e => setSearchQuery(e.target.value)}
-								/>
-
-								<button className='absolute right-0 top-1/2 transform -translate-y-1/2 p-0 m-0'>
-									<svg
-										width='20'
-										height='20'
-										viewBox='0 0 24 24'
-										fill='none'
-										xmlns='http://www.w3.org/2000/svg'
-										className='sm:w-6 sm:h-6'
-									>
-										<path
-											d='M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z'
-											stroke='#2A3F54'
-											strokeOpacity='0.5'
-											strokeWidth='2'
-											strokeLinecap='round'
-											strokeLinejoin='round'
-										/>
-										<path
-											d='M21 21L16.65 16.65'
-											stroke='#2A3F54'
-											strokeOpacity='0.5'
-											strokeWidth='2'
-											strokeLinecap='round'
-											strokeLinejoin='round'
-										/>
-									</svg>
-								</button>
-							</div>
+						<div className='relative flex items-center bg-white bg-opacity-20 border border-white border-opacity-50 rounded-full overflow-hidden'>
+							<input
+								ref={searchInputRef}
+								type='text'
+								placeholder='Күй немесе әннің атауын іздеу...'
+								className='flex-grow w-full bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 focus:outline-none text-sm sm:text-base'
+								value={searchQuery}
+								onChange={e => setSearchQuery(e.target.value)}
+							/>
 							<button
 								type='submit'
-								className='px-4 sm:px-6 py-3 sm:py-4'
+								className='absolute right-0 top-0 bottom-0 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-center'
 								aria-label='Поиск'
-								onClick={focusSearchInput}
 							>
 								<Image
 									src='/images/banner/search-icon.svg'
