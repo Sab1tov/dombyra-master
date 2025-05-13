@@ -58,7 +58,7 @@ const HomeBanner = () => {
 									ref={searchInputRef}
 									type='text'
 									placeholder='Күй немесе әннің атауын іздеу...'
-									className='w-full flex-grow bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 focus:outline-none text-sm sm:text-base'
+									className='w-full flex-grow bg-transparent text-black placeholder-white placeholder-opacity-50 px-2 py-3 sm:pl-6 sm:py-4 focus:outline-none text-sm sm:text-base'
 									value={searchQuery}
 									onChange={e => setSearchQuery(e.target.value)}
 								/>
