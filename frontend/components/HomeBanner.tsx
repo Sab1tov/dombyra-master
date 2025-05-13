@@ -61,13 +61,17 @@ const HomeBanner = () => {
 								value={searchQuery}
 								onChange={e => setSearchQuery(e.target.value)}
 							/>
-							<Image
-								src='/images/banner/search-icon.svg'
-								alt='Поиск'
-								width={20}
-								height={20}
-								className='opacity-50'
-							/>
+
+							{/* Иконка поиска с компонентом Image */}
+							<div className='absolute right-3 top-1/2 transform -translate-y-1/2 z-10 bg-[#2A3F54] bg-opacity-50 rounded-full p-1'>
+								<Image
+									src='/images/banner/search-icon.svg'
+									alt='Поиск'
+									width={20}
+									height={20}
+									className='opacity-90'
+								/>
+							</div>
 						</div>
 					</form>
 				</div>
