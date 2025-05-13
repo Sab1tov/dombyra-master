@@ -53,7 +53,7 @@ const HomeBanner = () => {
 						onClick={focusSearchInput}
 					>
 						<div className='flex items-center bg-white bg-opacity-20 border border-white border-opacity-50 rounded-full overflow-hidden'>
-							<div className='relative'>
+							<div className='relative w-full'>
 								<input
 									ref={searchInputRef}
 									type='text'
