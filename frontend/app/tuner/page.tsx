@@ -126,13 +126,13 @@ export default function TunerPage() {
 	return (
 		<div className='bg-[#FBF7F4] min-h-screen py-12'>
 			<div className='container mx-auto px-4 max-w-5xl'>
-				<h1 className='text-[80px] font-bold text-center text-[#2A3F54] mb-8'>
+				<h1 className='text-3xl sm:text-5xl md:text-6xl lg:text-[80px] font-bold text-center text-[#2A3F54] mb-8'>
 					Домбыра тюнері
 				</h1>
 
-				<div className='bg-white rounded-[30px] shadow-md p-8 mb-8'>
+				<div className='bg-white rounded-[30px] shadow-md p-4 sm:p-6 md:p-8 mb-8'>
 					<div className='text-center mb-8'>
-						<p className='text-[25px] text-[#2A3F54] mb-6'>
+						<p className='text-base sm:text-lg md:text-xl lg:text-[25px] text-[#2A3F54] mb-6'>
 							Домбыраңызды дұрыс күйге келтіру үшін микрофонды қосыңыз және
 							келесі қадамдарды орындаңыз.
 						</p>
@@ -156,8 +156,10 @@ export default function TunerPage() {
 							ref={containerRef}
 							className='iframe-container overflow-hidden rounded-[20px] relative'
 							style={{
-								height: '600px',
-								overflow: 'hidden', // Гарантированно отключаем скролл для контейнера
+								height: '400px',
+								sm: '500px',
+								md: '600px',
+								overflow: 'hidden',
 							}}
 						>
 							<iframe
