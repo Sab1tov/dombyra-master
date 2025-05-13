@@ -58,12 +58,12 @@ const HomeBanner = () => {
 									ref={searchInputRef}
 									type='text'
 									placeholder='Күй немесе әннің атауын іздеу...'
-									className='w-full flex-grow bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 focus:outline-none text-sm sm:text-base'
+									className='w-full flex-grow bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 pr-10 sm:pr-12 focus:outline-none text-sm sm:text-base'
 									value={searchQuery}
 									onChange={e => setSearchQuery(e.target.value)}
 								/>
 
-								<button className='absolute right-0 ml-2 top-1/2 transform -translate-y-1/2'>
+								<button className='absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2'>
 									<svg
 										width='20'
 										height='20'
