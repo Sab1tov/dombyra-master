@@ -53,12 +53,12 @@ const HomeBanner = () => {
 						onClick={focusSearchInput}
 					>
 						<div className='flex items-center bg-white bg-opacity-20 border border-white border-opacity-50 rounded-full overflow-hidden'>
-							<div className='relative w-full'>
+							<div className='relative w-[95%] sm:w-[97%]'>
 								<input
 									ref={searchInputRef}
 									type='text'
 									placeholder='Күй немесе әннің атауын іздеу...'
-									className='w-full flex-grow bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 pr-4 sm:pr-6 focus:outline-none text-sm sm:text-base'
+									className='w-full flex-grow bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 pr-2 focus:outline-none text-sm sm:text-base'
 									value={searchQuery}
 									onChange={e => setSearchQuery(e.target.value)}
 								/>
