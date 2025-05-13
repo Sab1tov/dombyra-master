@@ -52,36 +52,23 @@ const HomeBanner = () => {
 						className='relative max-w-xl opacity-50 outline-white outline-2 outline-offset-1 rounded-full'
 						onClick={focusSearchInput}
 					>
-						<div className='flex items-center bg-white bg-opacity-20 border border-white border-opacity-50 rounded-full overflow-hidden'>
+						<div className='relative bg-white bg-opacity-20 border border-white border-opacity-50 rounded-full overflow-hidden'>
 							<input
 								ref={searchInputRef}
 								type='text'
 								placeholder='Күй немесе әннің атауын іздеу...'
-								className='w-full bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 pr-12 focus:outline-none text-sm sm:text-base'
+								className='w-full bg-transparent text-black placeholder-white placeholder-opacity-50 px-4 py-3 sm:pl-6 sm:py-4 pr-14 focus:outline-none text-sm sm:text-base'
 								value={searchQuery}
 								onChange={e => setSearchQuery(e.target.value)}
 							/>
-							<button
-								type='submit'
-								className='absolute right-2 top-1/2 transform -translate-y-1/2'
-								aria-label='Поиск'
-							>
-								<svg
-									xmlns='http://www.w3.org/2000/svg'
-									width='22'
-									height='22'
-									viewBox='0 0 24 24'
-									fill='none'
-									stroke='white'
-									strokeWidth='2'
-									strokeLinecap='round'
-									strokeLinejoin='round'
-									className='feather feather-search'
-								>
-									<circle cx='11' cy='11' r='8'></circle>
-									<line x1='21' y1='21' x2='16.65' y2='16.65'></line>
-								</svg>
-							</button>
+
+							{/* Явно размещаем иконку поиска справа */}
+							<div className='absolute right-3 top-1/2 transform -translate-y-1/2 z-10'>
+								{/* Заменим на простую иконку магнификационного стекла */}
+								<div className='w-6 h-6 rounded-full border-2 border-white relative'>
+									<div className='absolute w-3 h-2 bg-white rotate-45 bottom-[-4px] right-[-6px] border-r-2 border-b-2 border-white'></div>
+								</div>
+							</div>
 						</div>
 					</form>
 				</div>
