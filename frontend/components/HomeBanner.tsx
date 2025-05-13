@@ -62,15 +62,30 @@ const HomeBanner = () => {
 								onChange={e => setSearchQuery(e.target.value)}
 							/>
 
-							{/* Иконка поиска с компонентом Image */}
-							<div className='absolute right-3 top-1/2 transform -translate-y-1/2 z-10 bg-[#2A3F54] bg-opacity-50 rounded-full p-1'>
-								<Image
-									src='/images/banner/search-icon.svg'
-									alt='Поиск'
-									width={20}
-									height={20}
-									className='opacity-90'
-								/>
+							{/* Иконка поиска как встроенный SVG */}
+							<div className='absolute right-3 top-1/2 transform -translate-y-1/2 z-10'>
+								<svg
+									width='20'
+									height='20'
+									viewBox='0 0 20 20'
+									fill='none'
+									xmlns='http://www.w3.org/2000/svg'
+								>
+									<path
+										d='M9 17C13.4183 17 17 13.4183 17 9C17 4.58172 13.4183 1 9 1C4.58172 1 1 4.58172 1 9C1 13.4183 4.58172 17 9 17Z'
+										stroke='#000000'
+										strokeWidth='2'
+										strokeLinecap='round'
+										strokeLinejoin='round'
+									/>
+									<path
+										d='M19 19L14.65 14.65'
+										stroke='#000000'
+										strokeWidth='2'
+										strokeLinecap='round'
+										strokeLinejoin='round'
+									/>
+								</svg>
 							</div>
 						</div>
 					</form>
