@@ -469,4 +469,40 @@ router.post('/refresh-token', async (req, res) => {
 	}
 })
 
+// Временный эндпоинт для выполнения миграции (удалить после использования)
+router.get('/run-migration', async (req, res) => {
+	try {
+		// Проверяем, существует ли колонка reset_token
+		const checkColumnQuery = `
+			SELECT column_name 
+			FROM information_schema.columns 
+			WHERE table_name = 'users' AND column_name = 'reset_token';
+		`
+		const columnExists = await pool.query(checkColumnQuery)
+
+		// Если колонка не существует, выполняем миграцию
+		if (columnExists.rows.length === 0) {
+			const migrationQuery = `
+				ALTER TABLE users
+				ADD COLUMN reset_token VARCHAR(255),
+				ADD COLUMN reset_token_expiry TIMESTAMP;
+			`
+			await pool.query(migrationQuery)
+			console.log(
+				'Миграция успешно выполнена: добавлены поля reset_token и reset_token_expiry'
+			)
+			return res.json({ message: 'Миграция успешно выполнена' })
+		}
+
+		return res.json({
+			message: 'Миграция не требуется, колонки уже существуют',
+		})
+	} catch (error) {
+		console.error('Ошибка при выполнении миграции:', error)
+		res
+			.status(500)
+			.json({ error: 'Ошибка при выполнении миграции', details: error.message })
+	}
+})
+
 module.exports = router
