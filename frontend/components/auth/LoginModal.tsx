@@ -3,7 +3,6 @@
 import { useModal } from '@/components/ModalManager'
 import { useAuthStore } from '@/store/authStore'
 import Cookies from 'js-cookie'
-import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
 
 const LoginModal = ({ onClose }: { onClose: () => void }) => {
@@ -12,7 +11,6 @@ const LoginModal = ({ onClose }: { onClose: () => void }) => {
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState('')
 
-	const router = useRouter()
 	const { openModal } = useModal()
 
 	// Предотвращаем прокрутку на оверлее
@@ -142,9 +140,12 @@ const LoginModal = ({ onClose }: { onClose: () => void }) => {
 
 	const handleForgotPassword = (e: React.MouseEvent) => {
 		e.preventDefault()
-		// Здесь можно добавить логику для восстановления пароля
-		router.push('/auth/reset-password')
+		// Закрываем модальное окно перед переходом
 		onClose()
+		// Используем setTimeout для более надежного перехода
+		setTimeout(() => {
+			window.location.href = '/auth/reset-password'
+		}, 100)
 	}
 
 	return (

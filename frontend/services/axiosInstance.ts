@@ -108,11 +108,11 @@ api.interceptors.response.use(
 							!currentPath.includes('/login') &&
 							!currentPath.includes('/register')
 						) {
-							console.log('🔄 Перенаправление на страницу входа')
+							console.log('�� Перенаправление на главную страницу')
 
 							// Используем setTimeout для предотвращения конфликтов с другими обработчиками
 							setTimeout(() => {
-								window.location.href = '/auth/login'
+								window.location.href = '/'
 							}, 100)
 						}
 					})
