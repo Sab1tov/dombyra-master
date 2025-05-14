@@ -66,7 +66,7 @@ async function sendPasswordResetEmail(email, resetToken, language = 'kz') {
 
 		const msg = {
 			to: email,
-			from: process.env.SENDGRID_FROM_EMAIL || 'noreply@dombyra.kz', // Верифицированный отправитель
+			from: process.env.SENDGRID_FROM_EMAIL || 'noreply@dombra-master.kz', // Верифицированный отправитель
 			subject: subject,
 			html: htmlContent,
 		}
@@ -84,31 +84,26 @@ async function sendPasswordResetEmail(email, resetToken, language = 'kz') {
 }
 
 /**
- * Отправляет приветственное письмо после регистрации
+ * Отправляет приветственное письмо новому пользователю
  * @param {string} email - Email получателя
- * @param {string} username - Имя пользователя
+ * @param {string} name - Имя пользователя
  * @param {string} language - Язык письма ('kz' или 'ru', по умолчанию 'kz')
  * @returns {Promise<boolean>} - Результат отправки
  */
-async function sendWelcomeEmail(email, username, language = 'kz') {
+async function sendWelcomeEmail(email, name, language = 'kz') {
 	try {
 		let subject, htmlContent
 
 		if (language === 'ru') {
-			subject = 'Добро пожаловать на Домбыра!'
+			subject = 'Добро пожаловать в Домбыра!'
 			htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4b87c; border-radius: 5px;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style="color: #2A3F54;">Добро пожаловать на Домбыра!</h1>
+            <h1 style="color: #2A3F54;">Добро пожаловать в Домбыра!</h1>
           </div>
-          <p>Здравствуйте, ${username}!</p>
-          <p>Благодарим вас за регистрацию на нашем сайте. Теперь вы можете:</p>
-          <ul>
-            <li>Просматривать ноты для домбры</li>
-            <li>Обучаться игре на домбре с помощью видеоуроков</li>
-            <li>Создавать свои коллекции любимых произведений</li>
-            <li>Отслеживать свой прогресс обучения</li>
-          </ul>
+          <p>Здравствуйте, ${name}!</p>
+          <p>Спасибо за регистрацию на нашем сайте. Мы рады приветствовать вас в нашем сообществе!</p>
+          <p>На нашем сайте вы можете найти множество композиций для домбры, учебные материалы и общаться с другими музыкантами.</p>
           <p style="text-align: center; margin: 30px 0;">
             <a href="${
 							process.env.FRONTEND_URL || 'http://localhost:3000'
@@ -121,20 +116,15 @@ async function sendWelcomeEmail(email, username, language = 'kz') {
       `
 		} else {
 			// Казахский язык по умолчанию
-			subject = 'Домбыра сайтына қош келдіңіз!'
+			subject = 'Домбыраға қош келдіңіз!'
 			htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4b87c; border-radius: 5px;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style="color: #2A3F54;">Домбыра сайтына қош келдіңіз!</h1>
+            <h1 style="color: #2A3F54;">Домбыраға қош келдіңіз!</h1>
           </div>
-          <p>Сәлеметсіз бе, ${username}!</p>
-          <p>Біздің сайтқа тіркелгеніңіз үшін рахмет. Енді сіз:</p>
-          <ul>
-            <li>Домбыраға арналған ноталарды қарай аласыз</li>
-            <li>Бейне сабақтар арқылы домбыра ойнауды үйрене аласыз</li>
-            <li>Өзіңіздің сүйікті шығармалар жинағын жасай аласыз</li>
-            <li>Оқу барысындағы жетістіктеріңізді бақылай аласыз</li>
-          </ul>
+          <p>Сәлеметсіз бе, ${name}!</p>
+          <p>Біздің сайтқа тіркелгеніңіз үшін рахмет. Біз сізді қауымдастығымызда қарсы алуға қуаныштымыз!</p>
+          <p>Біздің сайтта сіз домбыраға арналған көптеген композицияларды, оқу материалдарын таба аласыз және басқа музыканттармен қарым-қатынас жасай аласыз.</p>
           <p style="text-align: center; margin: 30px 0;">
             <a href="${
 							process.env.FRONTEND_URL || 'http://localhost:3000'
@@ -149,13 +139,13 @@ async function sendWelcomeEmail(email, username, language = 'kz') {
 
 		const msg = {
 			to: email,
-			from: process.env.SENDGRID_FROM_EMAIL || 'noreply@dombyra.kz',
+			from: process.env.SENDGRID_FROM_EMAIL || 'noreply@dombra-master.kz',
 			subject: subject,
 			html: htmlContent,
 		}
 
 		await sgMail.send(msg)
-		console.log(`Приветственное письмо успешно отправлено на ${email}`)
+		console.log(`Приветственный email успешно отправлен на ${email}`)
 		return true
 	} catch (error) {
 		console.error('Ошибка при отправке приветственного email:', error)
