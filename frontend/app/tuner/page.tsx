@@ -189,7 +189,7 @@ export default function TunerPage() {
 									height: '100vh',
 									width: isMobile ? 'calc(100% + 50px)' : 'calc(100% + 100px)',
 									left: isMobile ? '-25px' : '-50px',
-									top: isMobile ? '-95px' : '-55px',
+									top: isMobile ? '-95px' : '-51px',
 									pointerEvents: 'auto',
 									overflow: 'hidden',
 									transform: isMobile ? 'scale(1.02)' : 'scale(1)',
