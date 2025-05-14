@@ -8,10 +8,11 @@ const {
 	registerValidation,
 	loginValidation,
 } = require('../validators/authValidator')
-const nodemailer = require('nodemailer')
 const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
+// Импортируем сервис для отправки email
+const emailService = require('../services/emailService')
 
 require('dotenv').config()
 
@@ -31,7 +32,7 @@ router.post('/register', registerValidation, async (req, res) => {
 	}
 
 	try {
-		const { username, email, password } = req.body
+		const { username, email, password, language } = req.body
 
 		const userExists = await pool.query(
 			'SELECT * FROM users WHERE email = $1 OR username = $2',
@@ -49,6 +50,13 @@ router.post('/register', registerValidation, async (req, res) => {
 			'INSERT INTO users (username, email, password, created_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING id, username, email',
 			[username, email, hashedPassword]
 		)
+
+		// Отправляем приветственное письмо
+		emailService
+			.sendWelcomeEmail(email, username, language || 'kz')
+			.catch(err =>
+				console.error('Ошибка отправки приветственного письма:', err)
+			)
 
 		res.json({ message: 'Регистрация успешна!', user: newUser.rows[0] })
 	} catch (error) {
@@ -324,7 +332,7 @@ router.delete('/profile/avatar', authenticateToken, async (req, res) => {
 // Password reset request
 router.post('/reset-password', async (req, res) => {
 	try {
-		const { email } = req.body
+		const { email, language } = req.body
 
 		// Check if user exists
 		const userResult = await pool.query(
@@ -346,39 +354,21 @@ router.post('/reset-password', async (req, res) => {
 			[resetToken, resetTokenExpiry, email]
 		)
 
-		// Create email transporter
-		const transporter = nodemailer.createTransport({
-			host: process.env.SMTP_HOST,
-			port: process.env.SMTP_PORT,
-			auth: {
-				user: process.env.SMTP_USER,
-				pass: process.env.SMTP_PASS,
-			},
-		})
+		// Отправляем письмо через сервис SendGrid
+		const result = await emailService.sendPasswordResetEmail(
+			email,
+			resetToken,
+			language || 'kz'
+		)
 
-		// Send reset email
-		const resetUrl = `${
-			process.env.FRONTEND_URL || 'http://localhost:3000'
-		}/auth/new-password?token=${resetToken}`
-		const mailOptions = {
-			from: process.env.EMAIL_USER,
-			to: email,
-			subject: 'Құпия сөзді қалпына келтіру',
-			html: `
-				<h1>Құпия сөзді қалпына келтіру сұрауы</h1>
-				<p>Құпия сөзді қалпына келтіру үшін төмендегі сілтемені басыңыз:</p>
-				<a href="${resetUrl}">Құпия сөзді қалпына келтіру</a>
-				<p>Бұл сілтеме 1 сағат бойы жарамды.</p>
-				<p>Егер сіз құпия сөзді қалпына келтіруді сұрамаған болсаңыз, бұл хатты елемеуіңізді сұраймыз.</p>
-			`,
+		if (result) {
+			res.json({
+				message:
+					'Құпия сөзді қалпына келтіру нұсқаулары электрондық поштаға жіберілді',
+			})
+		} else {
+			throw new Error('Не удалось отправить email')
 		}
-
-		await transporter.sendMail(mailOptions)
-
-		res.json({
-			message:
-				'Құпия сөзді қалпына келтіру нұсқаулары электрондық поштаға жіберілді',
-		})
 	} catch (error) {
 		console.error('Password reset error:', error)
 		res.status(500).json({ error: 'Сервер қатесі орын алды' })

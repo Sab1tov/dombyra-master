@@ -50,11 +50,31 @@ console.log('---------------------------------------------------')
 
 // Настройка CORS с поддержкой доменов из переменной окружения
 const corsOptions = {
-	origin: process.env.CORS_ORIGIN || 'https://dombyra-master.vercel.app',
+	origin: function (origin, callback) {
+		// Если CORS_ORIGIN не указан, используем домен по умолчанию
+		const allowedOrigins = process.env.CORS_ORIGIN
+			? process.env.CORS_ORIGIN.split(',')
+			: ['https://dombyra-master.vercel.app']
+
+		// Разрешаем запросы без origin (например, от Postman)
+		if (!origin) {
+			return callback(null, true)
+		}
+
+		if (allowedOrigins.indexOf(origin) !== -1) {
+			callback(null, true)
+		} else {
+			console.log('Запрос заблокирован CORS политикой:', origin)
+			callback(new Error('Не разрешено CORS политикой'))
+		}
+	},
 	credentials: true,
 	optionsSuccessStatus: 200,
 }
-console.log('✅ CORS настроен для домена:', corsOptions.origin)
+console.log(
+	'✅ CORS настроен для доменов:',
+	process.env.CORS_ORIGIN || 'https://dombyra-master.vercel.app'
+)
 
 // Добавляем middleware
 app.use(cors(corsOptions))
