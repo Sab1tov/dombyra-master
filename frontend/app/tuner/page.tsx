@@ -169,7 +169,7 @@ export default function TunerPage() {
 									height: '100vh',
 									width: 'calc(100% + 100px)',
 									left: '-50px',
-									top: '0px',
+									top: '-70px',
 									pointerEvents: 'auto',
 									overflow: 'hidden',
 								}}
