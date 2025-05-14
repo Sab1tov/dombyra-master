@@ -168,7 +168,7 @@ export default function TunerPage() {
 								className='w-full absolute border-0'
 								style={{
 									height: '1000px',
-									top: '-50px', // Смещаем iframe вверх, чтобы скрыть верхнюю часть
+									top: '-100px', // Смещаем iframe вверх, чтобы скрыть верхнюю часть
 									pointerEvents: 'auto', // Разрешаем взаимодействие с контентом iframe
 									overflow: 'hidden',
 								}}
