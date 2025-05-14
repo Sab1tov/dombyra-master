@@ -167,7 +167,7 @@ export default function TunerPage() {
 								className='w-full absolute border-0'
 								style={{
 									height: '100vh',
-									top: '-50px', // Уменьшаем смещение, чтобы видеть больше контента
+									top: '0px', // Убираем смещение, чтобы видеть верхнюю часть тюнера
 									pointerEvents: 'auto',
 									overflow: 'hidden',
 								}}
