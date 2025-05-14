@@ -4,26 +4,112 @@ import { useEffect, useRef, useState } from 'react'
 
 export default function TunerPage() {
 	const [isLoading, setIsLoading] = useState(true)
-	const [isMobile, setIsMobile] = useState(false)
+	const [aspectRatio, setAspectRatio] = useState(0) // Соотношение сторон экрана
+	const [screenSize, setScreenSize] = useState({ width: 0, height: 0 })
 	const iframeRef = useRef<HTMLIFrameElement>(null)
 	const containerRef = useRef<HTMLDivElement>(null)
 
-	// Определяем, является ли устройство мобильным
+	// Определяем размеры экрана и соотношение сторон
 	useEffect(() => {
-		const checkIsMobile = () => {
-			setIsMobile(window.innerWidth < 768)
+		const updateScreenDimensions = () => {
+			const width = window.innerWidth
+			const height = window.innerHeight
+			const ratio = width / height
+
+			setScreenSize({ width, height })
+			setAspectRatio(ratio)
+
+			console.log(
+				`Размеры экрана: ${width}x${height}, соотношение сторон: ${ratio.toFixed(
+					2
+				)}`
+			)
 		}
 
 		// Проверяем при загрузке страницы
-		checkIsMobile()
+		updateScreenDimensions()
 
 		// Проверяем при изменении размера окна
-		window.addEventListener('resize', checkIsMobile)
+		window.addEventListener('resize', updateScreenDimensions)
+		window.addEventListener('orientationchange', updateScreenDimensions)
 
 		return () => {
-			window.removeEventListener('resize', checkIsMobile)
+			window.removeEventListener('resize', updateScreenDimensions)
+			window.removeEventListener('orientationchange', updateScreenDimensions)
 		}
 	}, [])
+
+	// Получаем настройки отображения на основе размеров экрана
+	const getViewportSettings = () => {
+		const { width, height } = screenSize
+		const isMobile = width < 768
+		const isSmallPhone = width <= 375
+		const isLargePhone = width >= 428 && width < 768
+		const isTablet = width >= 768 && width < 1024
+		const isLandscape = aspectRatio > 1
+
+		// Базовые пропорциональные настройки
+		const settings = {
+			containerHeight: Math.min(height * 0.7, 700), // 70% высоты экрана, но не более 700px
+			minHeight: Math.max(350, height * 0.5), // Минимум 350px или 50% высоты экрана
+			topOffset: -50, // Базовое смещение сверху
+			sideOffset: Math.round(width * 0.05), // 5% ширины экрана на смещение по бокам
+			widthBoost: Math.round(width * 0.1), // 10% дополнительной ширины
+			scale: 1,
+		}
+
+		// Корректировки для разных типов устройств
+		if (isSmallPhone) {
+			// Для маленьких телефонов (iPhone SE и подобные)
+			settings.topOffset = Math.round(-height * 0.1) // Смещение сверху 10% высоты экрана
+			settings.scale = Math.min(1.05, 1 + (375 - width) / 1000) // Больше масштаб для маленьких экранов
+			settings.containerHeight = Math.min(height * 0.65, 450)
+		} else if (isMobile && !isLandscape) {
+			// Для телефонов в портретной ориентации
+			settings.topOffset = Math.round(-height * 0.12) // Смещение сверху 12% высоты экрана
+			settings.scale = 1.02
+			settings.widthBoost = Math.round(width * 0.15) // 15% дополнительной ширины
+		} else if (isMobile && isLandscape) {
+			// Для телефонов в альбомной ориентации
+			settings.topOffset = Math.round(-height * 0.15) // Большее смещение в альбомном режиме
+			settings.containerHeight = Math.min(height * 0.8, 500)
+		} else if (isTablet && !isLandscape) {
+			// Для планшетов в портретной ориентации
+			settings.topOffset = Math.round(-height * 0.09)
+			settings.scale = 1.08
+			settings.containerHeight = Math.min(height * 0.6, 600)
+		} else if (isTablet && isLandscape) {
+			// Для планшетов в альбомной ориентации
+			settings.topOffset = Math.round(-height * 0.12)
+			settings.scale = 1.05
+			settings.containerHeight = Math.min(height * 0.7, 550)
+		} else if (isLargePhone) {
+			// Для больших телефонов (iPhone Pro Max и подобные)
+			settings.topOffset = Math.round(-height * 0.13) // Смещение сверху 13% высоты экрана
+			settings.scale = 1.04
+			settings.containerHeight = Math.min(height * 0.65, 550)
+		} else {
+			// Для настольных компьютеров
+			settings.topOffset = -50
+			settings.sideOffset = 50
+			settings.widthBoost = 100
+			settings.scale = 1
+			settings.containerHeight = Math.min(height * 0.7, 700)
+		}
+
+		// Возвращаем итоговые настройки с форматированием для CSS
+		return {
+			height: `${Math.round(settings.containerHeight)}px`,
+			minHeight: `${Math.round(settings.minHeight)}px`,
+			width: 'calc(100% + ' + settings.widthBoost + 'px)',
+			top: `${settings.topOffset}px`,
+			left: `${Math.round(-settings.sideOffset / 2)}px`, // Половина смещения влево для центрирования
+			scale: settings.scale,
+		}
+	}
+
+	// Получаем настройки для текущего размера экрана
+	const viewportSettings = getViewportSettings()
 
 	// Отслеживаем загрузку iframe
 	const handleIframeLoad = () => {
@@ -60,10 +146,13 @@ export default function TunerPage() {
 							}
 							
 							/* Скрываем приветственное сообщение */
-							.v-dialog, .v-overlay, .v-dialog__content, .v-dialog__scrim { 
+							.v-dialog, .v-overlay, .v-dialog__content, .v-dialog__scrim,
+							.v-overlay__content, .v-card, .v-card-title, .v-card-text,
+							.v-card-actions, .v-btn:contains("OK"), button:contains("OK") { 
 								display: none !important; 
 								opacity: 0 !important;
 								pointer-events: none !important;
+								visibility: hidden !important;
 							}
 							
 							/* Отключаем скролл во всех контейнерах */
@@ -96,17 +185,31 @@ export default function TunerPage() {
 						setTimeout(() => {
 							try {
 								// Поиск и клик по кнопке OK
-								const okButton =
-									iframeDoc.querySelector('button:contains("OK")') ||
-									iframeDoc.querySelector('.v-btn:contains("OK")') ||
-									iframeDoc.querySelector('.v-dialog button') ||
-									iframeDoc.getElementById('ok-button')
+								const buttons = iframeDoc.querySelectorAll('button')
+								const okButton = Array.from(buttons).find(
+									btn =>
+										btn.textContent?.includes('OK') ||
+										btn.innerHTML?.includes('OK')
+								)
 
-								if (okButton && okButton instanceof HTMLElement) {
+								if (okButton) {
 									okButton.click()
 									console.log(
 										'Автоматически закрыто диалоговое окно приветствия'
 									)
+								} else {
+									// Альтернативный метод: создаем обработку диалогов напрямую
+
+									// Найти диалоговое окно
+									const dialogs = iframeDoc.querySelectorAll(
+										'.v-dialog, .v-overlay, [role="dialog"]'
+									)
+									dialogs.forEach(dialog => {
+										if (dialog instanceof HTMLElement) {
+											dialog.style.display = 'none'
+											dialog.style.visibility = 'hidden'
+										}
+									})
 								}
 							} catch (e) {
 								console.log(
@@ -175,8 +278,8 @@ export default function TunerPage() {
 							ref={containerRef}
 							className='iframe-container overflow-hidden rounded-[20px] relative'
 							style={{
-								height: isMobile ? '450px' : 'min(85vh, 700px)',
-								minHeight: isMobile ? '400px' : '350px',
+								height: viewportSettings.height,
+								minHeight: viewportSettings.minHeight,
 								overflow: 'hidden',
 								width: '100%',
 							}}
@@ -187,12 +290,12 @@ export default function TunerPage() {
 								className='w-full absolute border-0'
 								style={{
 									height: '100vh',
-									width: isMobile ? 'calc(100% + 50px)' : 'calc(100% + 100px)',
-									left: isMobile ? '-25px' : '-50px',
-									top: isMobile ? '-95px' : '-50px',
+									width: viewportSettings.width,
+									left: viewportSettings.left,
+									top: viewportSettings.top,
 									pointerEvents: 'auto',
 									overflow: 'hidden',
-									transform: isMobile ? 'scale(1.02)' : 'scale(1)',
+									transform: `scale(${viewportSettings.scale})`,
 									transformOrigin: 'center center',
 								}}
 								scrolling='no'
