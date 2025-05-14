@@ -156,9 +156,8 @@ export default function TunerPage() {
 							ref={containerRef}
 							className='iframe-container overflow-hidden rounded-[20px] relative'
 							style={{
-								height: '400px',
-								sm: '500px',
-								md: '600px',
+								height: 'min(80vh, 700px)',
+								minHeight: '400px',
 								overflow: 'hidden',
 							}}
 						>
@@ -167,9 +166,9 @@ export default function TunerPage() {
 								src='https://qiuxiang.github.io/tuner/app/'
 								className='w-full absolute border-0'
 								style={{
-									height: '1000px',
-									top: '-100px', // Смещаем iframe вверх, чтобы скрыть верхнюю часть
-									pointerEvents: 'auto', // Разрешаем взаимодействие с контентом iframe
+									height: '100vh',
+									top: '-50px', // Уменьшаем смещение, чтобы видеть больше контента
+									pointerEvents: 'auto',
 									overflow: 'hidden',
 								}}
 								scrolling='no'
