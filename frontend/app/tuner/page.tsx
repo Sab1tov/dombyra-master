@@ -167,7 +167,7 @@ export default function TunerPage() {
 								src='https://qiuxiang.github.io/tuner/app/'
 								className='w-full absolute border-0'
 								style={{
-									height: '800px',
+									height: '1000px',
 									top: '-50px', // Смещаем iframe вверх, чтобы скрыть верхнюю часть
 									pointerEvents: 'auto', // Разрешаем взаимодействие с контентом iframe
 									overflow: 'hidden',
