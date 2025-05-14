@@ -82,17 +82,47 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
 // Проверяем и создаем директорию для загрузки файлов
+// В Railway мы используем тома, поэтому проверяем оба варианта путей
 const uploadsDir = path.join(__dirname, 'uploads')
 const avatarsDir = path.join(uploadsDir, 'avatars')
+const videosDir = path.join(uploadsDir, 'videos')
+const sheetMusicDir = path.join(uploadsDir, 'sheet_music')
 
-if (!fs.existsSync(uploadsDir)) {
-	fs.mkdirSync(uploadsDir, { recursive: true })
-	console.log('Создана директория для загрузок:', uploadsDir)
+// Директории Railway Volume
+const railwayDataDir = '/data'
+const railwayAvatarsDir = path.join(railwayDataDir, 'avatars')
+const railwayVideosDir = path.join(railwayDataDir, 'videos')
+const railwaySheetMusicDir = path.join(railwayDataDir, 'sheet_music')
+
+// Функция для безопасного создания директории если она не существует
+const ensureDirectoryExists = dir => {
+	if (!fs.existsSync(dir)) {
+		try {
+			fs.mkdirSync(dir, { recursive: true })
+			console.log(`✅ Создана директория: ${dir}`)
+		} catch (err) {
+			console.error(`❌ Ошибка при создании директории ${dir}:`, err.message)
+		}
+	}
 }
 
-if (!fs.existsSync(avatarsDir)) {
-	fs.mkdirSync(avatarsDir, { recursive: true })
-	console.log('Создана директория для аватаров:', avatarsDir)
+// Создаем локальные директории
+ensureDirectoryExists(uploadsDir)
+ensureDirectoryExists(avatarsDir)
+ensureDirectoryExists(videosDir)
+ensureDirectoryExists(sheetMusicDir)
+
+// Пытаемся создать директории в Railway Volume если они существуют
+if (process.env.NODE_ENV === 'production') {
+	try {
+		ensureDirectoryExists(railwayDataDir)
+		ensureDirectoryExists(railwayAvatarsDir)
+		ensureDirectoryExists(railwayVideosDir)
+		ensureDirectoryExists(railwaySheetMusicDir)
+		console.log('✅ Railway тома подготовлены')
+	} catch (err) {
+		console.error('❌ Ошибка при подготовке Railway томов:', err.message)
+	}
 }
 
 // Добавляем маршруты - подключаем только существующие маршруты
@@ -158,9 +188,58 @@ const checkDbConnection = async (retries = 5) => {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 // Добавление статической директории для загруженных файлов из Volume Railway
-app.use('/uploads/avatars', express.static('/data/avatars'))
-app.use('/uploads/videos', express.static('/data/videos'))
-app.use('/uploads/sheet_music', express.static('/data/sheet_music'))
+// Проверяем существование директорий перед монтированием
+if (process.env.NODE_ENV === 'production') {
+	try {
+		// Проверяем существование директорий Railway перед настройкой
+		if (fs.existsSync(railwayAvatarsDir)) {
+			app.use('/uploads/avatars', express.static(railwayAvatarsDir))
+			console.log(
+				`✅ Статические файлы из ${railwayAvatarsDir} доступны по /uploads/avatars`
+			)
+		} else {
+			console.log(
+				`⚠️ Директория ${railwayAvatarsDir} не существует, используем локальную`
+			)
+			app.use('/uploads/avatars', express.static(avatarsDir))
+		}
+
+		if (fs.existsSync(railwayVideosDir)) {
+			app.use('/uploads/videos', express.static(railwayVideosDir))
+			console.log(
+				`✅ Статические файлы из ${railwayVideosDir} доступны по /uploads/videos`
+			)
+		} else {
+			console.log(
+				`⚠️ Директория ${railwayVideosDir} не существует, используем локальную`
+			)
+			app.use('/uploads/videos', express.static(videosDir))
+		}
+
+		if (fs.existsSync(railwaySheetMusicDir)) {
+			app.use('/uploads/sheet_music', express.static(railwaySheetMusicDir))
+			console.log(
+				`✅ Статические файлы из ${railwaySheetMusicDir} доступны по /uploads/sheet_music`
+			)
+		} else {
+			console.log(
+				`⚠️ Директория ${railwaySheetMusicDir} не существует, используем локальную`
+			)
+			app.use('/uploads/sheet_music', express.static(sheetMusicDir))
+		}
+	} catch (err) {
+		console.error('❌ Ошибка при настройке Railway томов:', err.message)
+		// Резервный вариант - использовать локальные директории
+		app.use('/uploads/avatars', express.static(avatarsDir))
+		app.use('/uploads/videos', express.static(videosDir))
+		app.use('/uploads/sheet_music', express.static(sheetMusicDir))
+	}
+} else {
+	// Для режима разработки используем локальные директории
+	app.use('/uploads/avatars', express.static(avatarsDir))
+	app.use('/uploads/videos', express.static(videosDir))
+	app.use('/uploads/sheet_music', express.static(sheetMusicDir))
+}
 
 // Для проверки работы API
 app.get('/api/health', (req, res) => {
