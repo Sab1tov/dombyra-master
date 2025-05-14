@@ -59,6 +59,13 @@ export default function TunerPage() {
 								display: none !important; 
 							}
 							
+							/* Скрываем приветственное сообщение */
+							.v-dialog, .v-overlay, .v-dialog__content, .v-dialog__scrim { 
+								display: none !important; 
+								opacity: 0 !important;
+								pointer-events: none !important;
+							}
+							
 							/* Отключаем скролл во всех контейнерах */
 							div, section, article, main, aside {
 								overflow: hidden !important;
@@ -85,35 +92,29 @@ export default function TunerPage() {
 						iframeDoc.body.style.position = 'fixed'
 						iframeDoc.documentElement.style.position = 'fixed'
 
-						// Предотвращаем все события прокрутки
-						const preventScroll = (e: Event) => {
-							e.preventDefault()
-							e.stopPropagation()
-							return false
-						}
+						// Дополнительный код: пытаемся автоматически закрыть приветственное диалоговое окно
+						setTimeout(() => {
+							try {
+								// Поиск и клик по кнопке OK
+								const okButton =
+									iframeDoc.querySelector('button:contains("OK")') ||
+									iframeDoc.querySelector('.v-btn:contains("OK")') ||
+									iframeDoc.querySelector('.v-dialog button') ||
+									iframeDoc.getElementById('ok-button')
 
-						// Блокируем все события, которые могут вызвать прокрутку
-						const scrollEvents = [
-							'scroll',
-							'wheel',
-							'touchmove',
-							'mousewheel',
-							'DOMMouseScroll',
-						]
-
-						scrollEvents.forEach(eventType => {
-							iframeDoc.addEventListener(eventType, preventScroll, {
-								passive: false,
-							})
-							iframeDoc.body.addEventListener(eventType, preventScroll, {
-								passive: false,
-							})
-							iframeDoc.documentElement.addEventListener(
-								eventType,
-								preventScroll,
-								{ passive: false }
-							)
-						})
+								if (okButton && okButton instanceof HTMLElement) {
+									okButton.click()
+									console.log(
+										'Автоматически закрыто диалоговое окно приветствия'
+									)
+								}
+							} catch (e) {
+								console.log(
+									'Не удалось закрыть диалоговое окно автоматически',
+									e
+								)
+							}
+						}, 500)
 
 						// Отключаем инерционную прокрутку на мобильных устройствах
 						// @ts-expect-error - Используется нестандартное свойство webkit для мобильных устройств
@@ -174,9 +175,10 @@ export default function TunerPage() {
 							ref={containerRef}
 							className='iframe-container overflow-hidden rounded-[20px] relative'
 							style={{
-								height: isMobile ? 'min(85vh, 500px)' : 'min(85vh, 700px)',
-								minHeight: isMobile ? '300px' : '350px',
+								height: isMobile ? '450px' : 'min(85vh, 700px)',
+								minHeight: isMobile ? '400px' : '350px',
 								overflow: 'hidden',
+								width: '100%',
 							}}
 						>
 							<iframe
@@ -185,13 +187,13 @@ export default function TunerPage() {
 								className='w-full absolute border-0'
 								style={{
 									height: '100vh',
-									width: isMobile ? '100%' : 'calc(100% + 100px)',
-									left: isMobile ? '0px' : '-50px',
-									top: isMobile ? '-30px' : '-50px',
+									width: isMobile ? 'calc(100% + 50px)' : 'calc(100% + 100px)',
+									left: isMobile ? '-25px' : '-50px',
+									top: isMobile ? '-95px' : '-50px',
 									pointerEvents: 'auto',
 									overflow: 'hidden',
-									transform: isMobile ? 'scale(0.95)' : 'scale(1)',
-									transformOrigin: 'top center',
+									transform: isMobile ? 'scale(1.02)' : 'scale(1)',
+									transformOrigin: 'center center',
 								}}
 								scrolling='no'
 								onLoad={handleIframeLoad}
