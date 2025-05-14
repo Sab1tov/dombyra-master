@@ -1,11 +1,29 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export default function TunerPage() {
 	const [isLoading, setIsLoading] = useState(true)
+	const [isMobile, setIsMobile] = useState(false)
 	const iframeRef = useRef<HTMLIFrameElement>(null)
 	const containerRef = useRef<HTMLDivElement>(null)
+
+	// Определяем, является ли устройство мобильным
+	useEffect(() => {
+		const checkIsMobile = () => {
+			setIsMobile(window.innerWidth < 768)
+		}
+
+		// Проверяем при загрузке страницы
+		checkIsMobile()
+
+		// Проверяем при изменении размера окна
+		window.addEventListener('resize', checkIsMobile)
+
+		return () => {
+			window.removeEventListener('resize', checkIsMobile)
+		}
+	}, [])
 
 	// Отслеживаем загрузку iframe
 	const handleIframeLoad = () => {
@@ -156,8 +174,8 @@ export default function TunerPage() {
 							ref={containerRef}
 							className='iframe-container overflow-hidden rounded-[20px] relative'
 							style={{
-								height: 'min(80vh, 700px)',
-								minHeight: '400px',
+								height: isMobile ? 'min(85vh, 500px)' : 'min(85vh, 700px)',
+								minHeight: isMobile ? '300px' : '350px',
 								overflow: 'hidden',
 							}}
 						>
@@ -167,11 +185,13 @@ export default function TunerPage() {
 								className='w-full absolute border-0'
 								style={{
 									height: '100vh',
-									width: '100%',
-									left: '-50px',
-									top: '-70px',
+									width: isMobile ? '100%' : 'calc(100% + 100px)',
+									left: isMobile ? '0px' : '-50px',
+									top: isMobile ? '-30px' : '-50px',
 									pointerEvents: 'auto',
 									overflow: 'hidden',
+									transform: isMobile ? 'scale(0.95)' : 'scale(1)',
+									transformOrigin: 'top center',
 								}}
 								scrolling='no'
 								onLoad={handleIframeLoad}
