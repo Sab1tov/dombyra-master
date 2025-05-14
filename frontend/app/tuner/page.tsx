@@ -167,7 +167,7 @@ export default function TunerPage() {
 								className='w-full absolute border-0'
 								style={{
 									height: '100vh',
-									width: 'calc(100% + 100px)',
+									width: 'calc(100%)',
 									left: '-50px',
 									top: '-70px',
 									pointerEvents: 'auto',
