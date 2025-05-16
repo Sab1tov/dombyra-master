@@ -17,6 +17,9 @@ async function sendPasswordResetEmail(email, resetToken, language = 'kz') {
 			process.env.FRONTEND_URL || 'http://localhost:3000'
 		}/auth/new-password?token=${resetToken}`
 
+		console.log('Generated password reset URL:', resetUrl)
+		console.log('Reset token for email', email, ':', resetToken)
+
 		let subject, htmlContent
 
 		if (language === 'ru') {

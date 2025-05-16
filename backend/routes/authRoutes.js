@@ -346,7 +346,14 @@ router.post('/reset-password', async (req, res) => {
 
 		// Generate reset token
 		const resetToken = crypto.randomBytes(32).toString('hex')
-		const resetTokenExpiry = new Date(Date.now() + 3600000) // 1 hour from now
+
+		// Устанавливаем срок действия на завтра вместо 1 часа (для типа DATE)
+		const tomorrow = new Date()
+		tomorrow.setDate(tomorrow.getDate() + 1)
+		const resetTokenExpiry = tomorrow
+
+		console.log('Generated reset token:', resetToken)
+		console.log('Token expiry date set to:', resetTokenExpiry)
 
 		// Save reset token in database
 		await pool.query(
@@ -393,15 +400,30 @@ router.post('/new-password', async (req, res) => {
 			})
 		}
 
-		// Find user with valid reset token
+		// Найти пользователя только по токену, без проверки времени
 		console.log('Looking for user with token:', token)
 		const userResult = await pool.query(
-			'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expiry > NOW()',
+			'SELECT * FROM users WHERE reset_token = $1',
 			[token]
 		)
 		console.log('User lookup result rows:', userResult.rows.length)
 
 		if (userResult.rows.length === 0) {
+			return res.status(400).json({
+				error: 'Жарамсыз немесе мерзімі өткен қалпына келтіру сілтемесі',
+			})
+		}
+
+		// Проверка срока действия токена на уровне JavaScript
+		const today = new Date()
+		today.setHours(0, 0, 0, 0) // Обнуляем время для корректного сравнения с DATE
+		const tokenExpiryDate = new Date(userResult.rows[0].reset_token_expiry)
+
+		console.log('Token expiry date:', tokenExpiryDate)
+		console.log('Today date:', today)
+
+		if (tokenExpiryDate < today) {
+			console.log('Token expired')
 			return res.status(400).json({
 				error: 'Жарамсыз немесе мерзімі өткен қалпына келтіру сілтемесі',
 			})
