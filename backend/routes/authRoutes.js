@@ -378,13 +378,28 @@ router.post('/reset-password', async (req, res) => {
 // Reset password with token
 router.post('/new-password', async (req, res) => {
 	try {
+		console.log('Received new-password request with body:', req.body)
 		const { token, newPassword } = req.body
 
+		if (!token || !newPassword) {
+			console.log(
+				'Missing required fields - token:',
+				!!token,
+				'newPassword:',
+				!!newPassword
+			)
+			return res.status(400).json({
+				error: 'Не указан токен или новый пароль',
+			})
+		}
+
 		// Find user with valid reset token
+		console.log('Looking for user with token:', token)
 		const userResult = await pool.query(
 			'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expiry > NOW()',
 			[token]
 		)
+		console.log('User lookup result rows:', userResult.rows.length)
 
 		if (userResult.rows.length === 0) {
 			return res.status(400).json({
@@ -394,12 +409,14 @@ router.post('/new-password', async (req, res) => {
 
 		// Hash new password
 		const hashedPassword = await bcrypt.hash(newPassword, 10)
+		console.log('Password hashed successfully')
 
 		// Update password and clear reset token
 		await pool.query(
 			'UPDATE users SET password = $1, reset_token = NULL, reset_token_expiry = NULL WHERE reset_token = $2',
 			[hashedPassword, token]
 		)
+		console.log('Password updated successfully')
 
 		res.json({ message: 'Құпия сөз сәтті өзгертілді' })
 	} catch (error) {

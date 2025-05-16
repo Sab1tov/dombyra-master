@@ -14,7 +14,9 @@ export default function NewPasswordPage() {
 	const token = searchParams.get('token')
 
 	useEffect(() => {
+		console.log('Token from URL:', token)
 		if (!token) {
+			console.log('No token found, redirecting to home')
 			router.push('/')
 		}
 	}, [token, router])
@@ -30,22 +32,26 @@ export default function NewPasswordPage() {
 			return
 		}
 
-		try {
-			const response = await fetch(
-				`${process.env.NEXT_PUBLIC_API_URL}/api/auth/new-password`,
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({
-						token,
-						newPassword: password,
-					}),
-				}
-			)
+		console.log('Sending password reset request with token:', token)
 
+		try {
+			const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/new-password`
+			console.log('Sending request to:', apiUrl)
+
+			const response = await fetch(apiUrl, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					token,
+					newPassword: password,
+				}),
+			})
+
+			console.log('Response status:', response.status)
 			const data = await response.json()
+			console.log('Response data:', data)
 
 			if (!response.ok) {
 				throw new Error(data.error || 'Қате орын алды')
@@ -53,6 +59,7 @@ export default function NewPasswordPage() {
 
 			setSuccess(true)
 		} catch (error) {
+			console.error('Password reset error:', error)
 			setError(error instanceof Error ? error.message : 'Қате орын алды')
 		} finally {
 			setLoading(false)
