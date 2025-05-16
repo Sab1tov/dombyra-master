@@ -26,29 +26,6 @@ export default function ResetPasswordPage() {
 		}
 	}, [user, router])
 
-	// Проверяем URL параметры для предотвращения непреднамеренного перенаправления
-	useEffect(() => {
-		// Проверяем, был ли пользователь перенаправлен сюда по ошибке
-		if (typeof window !== 'undefined') {
-			const url = new URL(window.location.href)
-			const redirect = url.searchParams.get('redirect')
-			const error = url.searchParams.get('error')
-
-			// Если нет специального параметра перенаправления или ошибки, и пользователь пришел с другой страницы
-			if (
-				!redirect &&
-				!error &&
-				document.referrer &&
-				!document.referrer.includes('/auth/')
-			) {
-				console.log(
-					'Обнаружено непреднамеренное перенаправление, возврат на предыдущую страницу'
-				)
-				window.history.back()
-			}
-		}
-	}, [])
-
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		setLoading(true)

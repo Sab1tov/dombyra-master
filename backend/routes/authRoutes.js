@@ -8,10 +8,11 @@ const {
 	registerValidation,
 	loginValidation,
 } = require('../validators/authValidator')
-const nodemailer = require('nodemailer')
 const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
+// Импортируем сервис для отправки email
+const emailService = require('../services/emailService')
 
 require('dotenv').config()
 
@@ -31,7 +32,7 @@ router.post('/register', registerValidation, async (req, res) => {
 	}
 
 	try {
-		const { username, email, password } = req.body
+		const { username, email, password, language } = req.body
 
 		const userExists = await pool.query(
 			'SELECT * FROM users WHERE email = $1 OR username = $2',
@@ -49,6 +50,13 @@ router.post('/register', registerValidation, async (req, res) => {
 			'INSERT INTO users (username, email, password, created_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING id, username, email',
 			[username, email, hashedPassword]
 		)
+
+		// Отправляем приветственное письмо
+		emailService
+			.sendWelcomeEmail(email, username, language || 'kz')
+			.catch(err =>
+				console.error('Ошибка отправки приветственного письма:', err)
+			)
 
 		res.json({ message: 'Регистрация успешна!', user: newUser.rows[0] })
 	} catch (error) {
@@ -324,7 +332,7 @@ router.delete('/profile/avatar', authenticateToken, async (req, res) => {
 // Password reset request
 router.post('/reset-password', async (req, res) => {
 	try {
-		const { email } = req.body
+		const { email, language } = req.body
 
 		// Check if user exists
 		const userResult = await pool.query(
@@ -338,7 +346,14 @@ router.post('/reset-password', async (req, res) => {
 
 		// Generate reset token
 		const resetToken = crypto.randomBytes(32).toString('hex')
-		const resetTokenExpiry = new Date(Date.now() + 3600000) // 1 hour from now
+
+		// Устанавливаем срок действия на завтра вместо 1 часа (для типа DATE)
+		const tomorrow = new Date()
+		tomorrow.setDate(tomorrow.getDate() + 1)
+		const resetTokenExpiry = tomorrow
+
+		console.log('Generated reset token:', resetToken)
+		console.log('Token expiry date set to:', resetTokenExpiry)
 
 		// Save reset token in database
 		await pool.query(
@@ -346,39 +361,21 @@ router.post('/reset-password', async (req, res) => {
 			[resetToken, resetTokenExpiry, email]
 		)
 
-		// Create email transporter
-		const transporter = nodemailer.createTransport({
-			host: process.env.SMTP_HOST,
-			port: process.env.SMTP_PORT,
-			auth: {
-				user: process.env.SMTP_USER,
-				pass: process.env.SMTP_PASS,
-			},
-		})
+		// Отправляем письмо через сервис SendGrid
+		const result = await emailService.sendPasswordResetEmail(
+			email,
+			resetToken,
+			language || 'kz'
+		)
 
-		// Send reset email
-		const resetUrl = `${
-			process.env.FRONTEND_URL || 'http://localhost:3000'
-		}/auth/new-password?token=${resetToken}`
-		const mailOptions = {
-			from: process.env.EMAIL_USER,
-			to: email,
-			subject: 'Құпия сөзді қалпына келтіру',
-			html: `
-				<h1>Құпия сөзді қалпына келтіру сұрауы</h1>
-				<p>Құпия сөзді қалпына келтіру үшін төмендегі сілтемені басыңыз:</p>
-				<a href="${resetUrl}">Құпия сөзді қалпына келтіру</a>
-				<p>Бұл сілтеме 1 сағат бойы жарамды.</p>
-				<p>Егер сіз құпия сөзді қалпына келтіруді сұрамаған болсаңыз, бұл хатты елемеуіңізді сұраймыз.</p>
-			`,
+		if (result) {
+			res.json({
+				message:
+					'Құпия сөзді қалпына келтіру нұсқаулары электрондық поштаға жіберілді',
+			})
+		} else {
+			throw new Error('Не удалось отправить email')
 		}
-
-		await transporter.sendMail(mailOptions)
-
-		res.json({
-			message:
-				'Құпия сөзді қалпына келтіру нұсқаулары электрондық поштаға жіберілді',
-		})
 	} catch (error) {
 		console.error('Password reset error:', error)
 		res.status(500).json({ error: 'Сервер қатесі орын алды' })
@@ -388,13 +385,28 @@ router.post('/reset-password', async (req, res) => {
 // Reset password with token
 router.post('/new-password', async (req, res) => {
 	try {
+		console.log('Received new-password request with body:', req.body)
 		const { token, newPassword } = req.body
 
-		// Find user with valid reset token
+		if (!token || !newPassword) {
+			console.log(
+				'Missing required fields - token:',
+				!!token,
+				'newPassword:',
+				!!newPassword
+			)
+			return res.status(400).json({
+				error: 'Не указан токен или новый пароль',
+			})
+		}
+
+		// Найти пользователя только по токену, без проверки времени
+		console.log('Looking for user with token:', token)
 		const userResult = await pool.query(
-			'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expiry > NOW()',
+			'SELECT * FROM users WHERE reset_token = $1',
 			[token]
 		)
+		console.log('User lookup result rows:', userResult.rows.length)
 
 		if (userResult.rows.length === 0) {
 			return res.status(400).json({
@@ -402,14 +414,31 @@ router.post('/new-password', async (req, res) => {
 			})
 		}
 
+		// Проверка срока действия токена на уровне JavaScript
+		const today = new Date()
+		today.setHours(0, 0, 0, 0) // Обнуляем время для корректного сравнения с DATE
+		const tokenExpiryDate = new Date(userResult.rows[0].reset_token_expiry)
+
+		console.log('Token expiry date:', tokenExpiryDate)
+		console.log('Today date:', today)
+
+		if (tokenExpiryDate < today) {
+			console.log('Token expired')
+			return res.status(400).json({
+				error: 'Жарамсыз немесе мерзімі өткен қалпына келтіру сілтемесі',
+			})
+		}
+
 		// Hash new password
 		const hashedPassword = await bcrypt.hash(newPassword, 10)
+		console.log('Password hashed successfully')
 
 		// Update password and clear reset token
 		await pool.query(
 			'UPDATE users SET password = $1, reset_token = NULL, reset_token_expiry = NULL WHERE reset_token = $2',
 			[hashedPassword, token]
 		)
+		console.log('Password updated successfully')
 
 		res.json({ message: 'Құпия сөз сәтті өзгертілді' })
 	} catch (error) {
@@ -476,6 +505,42 @@ router.post('/refresh-token', async (req, res) => {
 	} catch (error) {
 		console.error('Ошибка обновления токена:', error)
 		res.status(500).json({ error: 'Ошибка сервера при обновлении токена' })
+	}
+})
+
+// Временный эндпоинт для выполнения миграции (удалить после использования)
+router.get('/run-migration', async (req, res) => {
+	try {
+		// Проверяем, существует ли колонка reset_token
+		const checkColumnQuery = `
+			SELECT column_name 
+			FROM information_schema.columns 
+			WHERE table_name = 'users' AND column_name = 'reset_token';
+		`
+		const columnExists = await pool.query(checkColumnQuery)
+
+		// Если колонка не существует, выполняем миграцию
+		if (columnExists.rows.length === 0) {
+			const migrationQuery = `
+				ALTER TABLE users
+				ADD COLUMN reset_token VARCHAR(255),
+				ADD COLUMN reset_token_expiry TIMESTAMP;
+			`
+			await pool.query(migrationQuery)
+			console.log(
+				'Миграция успешно выполнена: добавлены поля reset_token и reset_token_expiry'
+			)
+			return res.json({ message: 'Миграция успешно выполнена' })
+		}
+
+		return res.json({
+			message: 'Миграция не требуется, колонки уже существуют',
+		})
+	} catch (error) {
+		console.error('Ошибка при выполнении миграции:', error)
+		res
+			.status(500)
+			.json({ error: 'Ошибка при выполнении миграции', details: error.message })
 	}
 })
 
