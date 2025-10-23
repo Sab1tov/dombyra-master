@@ -6,7 +6,7 @@ const Footer = () => {
 			<div className='container mx-auto px-4'>
 				<div className='flex flex-col md:flex-row justify-between items-center gap-6'>
 					{/* Лого SHAMS */}
-					<div className='flex items-center'>
+					{/*<div className='flex items-center'>
 						<Image
 							src='/images/logo/shams-logo.svg'
 							alt='SHAMS logo'
@@ -14,11 +14,10 @@ const Footer = () => {
 							height={64}
 							className='ml-2'
 						/>
-					</div>
-
+					</div> */}
 					{/* Copyright */}
 					<div className='text-white text-sm order-3 md:order-2'>
-						Copyright © {new Date().getFullYear()} SHAMS. All Right Reserved.
+						Copyright © {new Date().getFullYear()} RPO3. All Right Reserved.
 					</div>
 
 					{/* Address and Social */}
@@ -31,7 +30,7 @@ const Footer = () => {
 								height={16}
 							/>
 							<div>
-								SDU University, Kaskelen,
+								INTC, Almaty,
 								<br />
 								Qazaqstan
 							</div>
